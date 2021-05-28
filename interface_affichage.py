@@ -9,6 +9,8 @@ class Work_area_Window(Frame):
     def __init__(self, parent, file=None):
 
         Frame.__init__(self, parent)
+        self.paramaters={}
+        self.default_params_init()
         self.index=1
         self.project_label=StringVar()
         self.project_label.set("")
@@ -66,8 +68,42 @@ class Work_area_Window(Frame):
         menu2.grid(row=0, column=3, padx=15, pady=5)
         frame.grid(row=0, column=0, sticky=N + S + E + W)
 
+
+    def default_params_init(self):
+
+        ppv = {
+            "depart": 0
+        }
+        self.paramaters["ppv"]=ppv
+        #print(self.paramaters)
+
+    def get_params(self,methode):
+        if (methode == "ppv"):
+            params = self.paramaters.get("ppv")
+            None
+
     def show_ppv(self):
-             None
+        frame = self.graph_frame.frame
+        frame_ppv = Frame(frame)
+        frame_ppv.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
+        Grid.rowconfigure(frame_ppv, 0, weight=1)
+        Grid.columnconfigure(frame_ppv, 0, weight=1)
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+        print(self.paramaters)
+        depart =  self.paramaters["ppv"]["depart"]
+        depart_tk=IntVar(depart)
+        frame_ppv_params = Frame(frame_ppv)
+        frame_ppv_params.pack()
+        Label(frame_ppv_params,text="Ville de départ:").grid(column=0, columnspan=1, row=0,padx=10)
+        Entry(frame_ppv_params,textvariable=depart_tk).grid(column=1, columnspan=1, row=0,padx=10)
+        self.graph_frame.update()
+        Button(frame_ppv_params, text="Calculer", command=partial(self.show,depart)).grid(column=2, columnspan=1, row=0,padx=10)
+        Button(frame_ppv_params, text="PPV Généralisée", command=None).grid(column=3, columnspan=1, row=0,padx=10)
+
+
+    def show_ppv_result(self):
+                 None
     def show_programmation_dynamique(self):
 
         tour,cout,time=Programation_dynamique(self.file.distances,self.file.nb_villes)

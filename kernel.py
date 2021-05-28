@@ -627,7 +627,8 @@ def ppv_gen(distances):
     return tour_optimal, cout_optimal, time2 - time1
 
 
-def ppv(debut, distances):
+def ppv(debut, distances, temps=False):
+    time1 = time.time()
     visite = [debut]
     N = distances.shape[0]
     last = debut
@@ -654,7 +655,12 @@ def ppv(debut, distances):
         cout += min_distance
     cout += distances[last - 1, debut - 1]
     visite.append(debut)
-    return visite, cout
+    time2 = time.time()
+    if temps:
+        return visite, cout, time2 - time1
+    else:
+        return visite, cout
+
 
 def transform(distances):
     edge=[]
