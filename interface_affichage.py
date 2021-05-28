@@ -67,7 +67,7 @@ class Work_area_Window(Frame):
         frame.grid(row=0, column=0, sticky=N + S + E + W)
 
     def show_ppv(self):
-
+             None
     def show_programmation_dynamique(self):
 
         tour,cout,time=Programation_dynamique(self.file.distances,self.file.nb_villes)
