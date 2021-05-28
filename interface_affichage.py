@@ -88,7 +88,6 @@ class Work_area_Window(Frame):
             None
 
     def show_ppv(self):
-<<<<<<< HEAD
         frame = self.graph_frame.frame
         frame_ppv = Frame(frame)
         frame_ppv.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
@@ -110,8 +109,6 @@ class Work_area_Window(Frame):
 
     def show_ppv_result(self):
                  None
-=======
-             None
     def show_2opt(self):
         frame = self.graph_frame.frame
         labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")
