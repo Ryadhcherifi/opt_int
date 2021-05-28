@@ -5,6 +5,8 @@ import copy
 import time
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import random
+
 
 class File:
 
@@ -670,6 +672,7 @@ def transform(distances):
     return edge
 
 def moindre_cout(distances):
+    startTime = time.time()
     n = np.size(distances, 0)
     edgelist = transform(distances)
     dist_min = 0
@@ -684,7 +687,8 @@ def moindre_cout(distances):
                 dist_min = dist_min + key[2]
                 if len(arete) == 2 * n:
                     break
-    return tolist(arete), dist_min
+    finishTime = time.time()
+    return dist_min, finishTime - startTime, list(np.array(tolist(arete)) - 1)
 
 
 def cycle(aret, arr, n, m):
@@ -757,3 +761,19 @@ def tolist(tab):
                 flat_list = np.delete(flat_list, [ind[0], ind[0] - 1])
     return root
 
+def Rand(start, end,distances):
+    time1 = time.time()
+
+    res = []
+    fin=False
+    num=end+1
+    while not fin:
+        k=random.randint(start, end)
+        if not(k in res):
+            res.append(k)
+            if (len(res)==num-1):
+                fin=True
+    res.append(res[0])
+    time2 = time.time()
+    cout=cost(distances,res)
+    return cout,time2-time1,res
