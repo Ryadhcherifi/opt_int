@@ -103,12 +103,12 @@ class Work_area_Window(Frame):
         Label(frame_ppv_params,text="Ville de départ:").grid(column=0, columnspan=1, row=0,padx=10)
         Entry(frame_ppv_params,textvariable=depart_tk).grid(column=1, columnspan=1, row=0,padx=10)
         self.graph_frame.update()
-        Button(frame_ppv_params, text="Calculer", command=partial(self.show,depart)).grid(column=2, columnspan=1, row=0,padx=10)
+        Button(frame_ppv_params, text="Calculer", command=partial(self.show_ppv_result,depart_tk)).grid(column=2, columnspan=1, row=0,padx=10)
         Button(frame_ppv_params, text="PPV Généralisée", command=None).grid(column=3, columnspan=1, row=0,padx=10)
 
 
-    def show_ppv_result(self):
-                 None
+    def show_ppv_result(self,depart_tk):
+                 print("Depart="+str(depart_tk.get()))
     def show_2opt(self):
         frame = self.graph_frame.frame
         labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")
