@@ -447,3 +447,307 @@ def plotcycle(points, route, cout, file_path,algo,texec):
         i = i + 1
     #plt.savefig(file_path + '.png')
     return fig
+
+
+def best_move(x1, x2, y1, y2, z1, z2, distances):
+    gain = 0
+    case = 0
+    defualt_gain = distances[x1, x2] + distances[y1, y2] + distances[z1, z2]
+    # best_tour = tour
+
+    tmp = cost_change(distances, x1, x2, y1, y2)
+    if (tmp < gain):
+        gain = tmp
+        case = 1
+    tmp = cost_change(distances, x1, x2, z1, z2)
+    if (tmp < gain):
+        gain = tmp
+        case = 2
+    tmp = cost_change(distances, y1, y2, z1, z2)
+    if (tmp < gain):
+        gain = tmp
+        case = 3
+    tmp = distances[x1, y1] + distances[x2, z1] + distances[y2, z2] - defualt_gain
+    if (tmp < gain):
+        gain = tmp
+        case = 4
+    tmp = distances[x1, z1] + distances[y2, x2] + distances[y1, z2] - defualt_gain
+    if (tmp < gain):
+        gain = tmp
+        case = 5
+    tmp = distances[x1, y2] + distances[z1, y1] + distances[x2, z2] - defualt_gain
+    if (tmp < gain):
+        gain = tmp
+        case = 6
+    tmp = distances[x1, y2] + distances[z1, x2] + distances[y1, z2] - defualt_gain
+    if (tmp < gain):
+        gain = tmp
+        case = 7
+    if (abs(gain) < 1e-8):
+        return 0, gain
+    else:
+        return case, gain
+
+
+def permute_aretes(tour, cas, x1, x2, y1, y2, z1, z2):
+    b = tour[x2:y2]
+    c = tour[y2:z2]
+    dim = len(tour)
+    if (z2 != dim):
+        # c = tour[y2:z2]
+        if cas == 1:
+            tour[x2:y2] = np.flip(tour[x2:y2])
+        elif cas == 2:
+            tour[x2:z2] = np.flip(tour[x2:z2])
+        elif cas == 3:
+            tour[y2:z2] = np.flip(tour[y2:z2])
+        elif cas == 4:
+            tour = np.concatenate((tour[0:x2], np.flip(b), np.flip(c), tour[z2:dim]), None)
+        elif cas == 5:
+            tour = np.concatenate((tour[0:x2], np.flip(c), b, tour[z2:dim]), None)
+        elif cas == 6:
+            tour = np.concatenate((tour[0:x2], c, np.flip(b), tour[z2:dim]), None)
+        elif cas == 7:
+            tour = np.concatenate((tour[0:x2], c, b, tour[z2:dim]), None)
+    else:
+        if cas == 1:
+            tour[x2:y2] = np.flip(tour[x2:y2])
+        elif cas == 2:
+            tour[0:x2] = tour[x1::-1]  # best[0:i1] = best[i::-1]
+        elif cas == 3:
+            tour[0:y2] = tour[y1::-1]
+        elif cas == 4:
+            tour = np.concatenate((tour[0:x2], np.flip(b), np.flip(c)), None)
+        elif cas == 5:
+            tour = np.concatenate((tour[0:x2], np.flip(c), b), None)
+        elif cas == 6:
+            tour = np.concatenate((tour[0:x2], c, np.flip(b)), None)
+        elif cas == 7:
+            tour = np.concatenate((tour[0:x2], c, b), None)
+    return tour
+
+def cost(cost_mat, route):
+    #print(route)
+    return cost_mat[np.roll(route, 1), route].sum()
+
+def cost_change(cost_mat, n1, n2, n3, n4):
+    change= cost_mat[n1][n3] + cost_mat[n2][n4] - cost_mat[n1][n2] - cost_mat[n3][n4]
+    if (abs(change) < 1e-8) :
+        return 0
+    else :
+        return change
+
+
+def three_opt(route, distances):
+    route = np.array(route)
+    time1 = time.time()
+    if route[-1] == route[0]:
+        best = np.resize(route, np.size(route, 0) - 1)
+    else:
+        best = route
+    dim = len(best)
+    improved = True
+    z = 0
+    while improved:
+        print(z)
+        z = z + 1
+        improved = False
+        for i in range(dim - 4):
+            for j in range(i + 2, dim - 2):
+                for k in range(j + 2, dim):
+                    if (((k + 1) % dim) != i):
+                        cas, gain = best_move(best[i], best[i + 1], best[j], best[j + 1], best[k],
+                                              best[((k + 1) % dim)], distances)
+                        if (cas != 0):
+                            if (k + 1) == dim:
+                                # print("hna")
+                                print("cas:" + str(cas))
+                            improved = True
+                            best = permute_aretes(best, cas, i, i + 1, j, j + 1, k, k + 1)
+
+                            # print(gain)
+                            # print(cost(distances,best))
+                            # print(i,j)
+    time2 = time.time()
+    cout = cost(distances, best)
+    best = np.resize(best, np.size(best, 0) + 1)
+    best[np.size(best, 0) - 1] = best[0]
+    return cout, list(best), time2 - time1
+
+
+def two_opt2(route, cost_mat):
+    route = np.array(route)
+    time1 = time.time()
+    if route[-1] == route[0]:
+        best = np.resize(route, np.size(route, 0) - 1)
+    else:
+        best = route
+    dim = len(best)
+    improved = True
+    while improved:
+        improved = False
+        for i in range(dim):
+            i1 = (i + 1) % dim
+            for j in range(i + 1, dim):
+                j1 = (j + 1) % dim
+                if ((j != i) and (j != i1) and (j != (i - 1) % dim)):
+                    if cost_change(cost_mat, best[i], best[((i + 1) % dim)], best[(j)], best[j1]) < 0:
+                        change = cost_change(cost_mat, best[i], best[((i + 1) % dim)], best[(j)], best[j1])
+                        if (j1 == 0):
+                            best[0:i1] = best[i::-1]
+                        else:
+
+                            best[i1:j1] = best[j:i:-1]
+                        improved = True
+                        # print(change)
+                        # print(i)
+                        # print(j)
+                        # print(cost(distances,best))
+
+    time2 = time.time()
+    cout = cost(cost_mat, best)
+    best = np.resize(best, np.size(best, 0) + 1)
+    best[np.size(best, 0) - 1] = best[0]
+    return cout, list(best), time2 - time1
+
+
+def ppv_gen(distances):
+    cout_optimal = None
+    N = distances.shape[0]
+    time1 = time.time()
+    for i in range(N):
+        tour, cout = ppv(i + 1, distances)
+        if (cout_optimal is None):
+            cout_optimal = cout
+            tour_optimal = tour
+        elif (cout < cout_optimal):
+            cout_optimal = cout
+            tour_optimal = tour
+    time2 = time.time()
+    return tour_optimal, cout_optimal, time2 - time1
+
+
+def ppv(debut, distances):
+    visite = [debut]
+    N = distances.shape[0]
+    last = debut
+    cout = 0
+    not_visite = list(range(1, N + 1))
+    not_visite.remove(debut)
+    while (len(visite) != N):
+        min_ville = None
+        min_distance = None
+
+        for i in not_visite:
+            num_ville = i
+            if (num_ville != last):
+                if (min_ville) == None:
+                    min_ville = num_ville
+                    min_distance = distances[num_ville - 1, last - 1]
+
+                elif (distances[num_ville - 1, last - 1] < min_distance):
+                    min_ville = num_ville
+                    min_distance = distances[num_ville - 1, last - 1]
+        last = min_ville
+        visite.append(min_ville)
+        not_visite.remove(min_ville)
+        cout += min_distance
+    cout += distances[last - 1, debut - 1]
+    visite.append(debut)
+    return visite, cout
+
+def transform(distances):
+    edge=[]
+    for i in range(0,np.size(distances,0)):
+        for j in range(i+1,np.size(distances,0)):
+            edge.append([i+1,j+1,distances[i,j]])
+    return edge
+
+def moindre_cout(distances):
+    n = np.size(distances, 0)
+    edgelist = transform(distances)
+    dist_min = 0
+    arete = []
+    dist = copy.deepcopy(edgelist)
+    dist.sort(key=lambda dist: dist[2])
+    for key in dist:
+        if degre(arete, key, n):
+            if cycle(arete, key, n, len(arete)):
+                arete.append(key[0])
+                arete.append(key[1])
+                dist_min = dist_min + key[2]
+                if len(arete) == 2 * n:
+                    break
+    return tolist(arete), dist_min
+
+
+def cycle(aret, arr, n, m):
+    sommet1 = arr[0]
+    sommet2 = arr[1]
+    cyc = copy.deepcopy(aret)
+    courant = copy.deepcopy(sommet1)
+    fin = False
+    flat_list = np.array(cyc)
+
+    while not fin:
+        ind = np.where(flat_list == courant)[0]
+
+        if np.size(ind) == 0:
+            fin = True
+            boole = True
+        else:
+            if ind[0] % 2 == 0:
+                courant = flat_list[ind[0] + 1]
+                flat_list = np.delete(flat_list, [ind[0], ind[0] + 1])
+            elif ind[0] % 2 == 1:
+                courant = flat_list[ind[0] - 1]
+                flat_list = np.delete(flat_list, [ind[0], ind[0] - 1])
+            if courant == sommet2:
+                fin = True
+                if (len(aret) < 2 * n - 2):
+                    boole = False
+                else:
+                    boole = True
+    return boole
+
+
+def degre(arete, arr, n):
+    sommet1 = arr[0]
+    sommet2 = arr[1]
+    deg1 = 0
+    deg2 = 0
+    bool = True
+    for i in arete:
+        if i == sommet1:
+            deg1 = deg1 + 1
+        elif i == sommet2:
+            deg2 = deg2 + 1
+        if (deg1 > 1 or deg2 > 1):
+            bool = False
+            break
+    return bool
+
+
+def tolist(tab):
+    sommet1 = tab[0]
+    cyc = copy.deepcopy(tab)
+    courant = copy.deepcopy(sommet1)
+    fin = False
+    flat_list = np.array(cyc)
+    root = []
+    root.append(sommet1)
+    while not fin:
+        ind = np.where(flat_list == courant)[0]
+        if np.size(ind) == 0:
+            fin = True
+        else:
+            if ind[0] % 2 == 0:
+                root.append(flat_list[ind[0] + 1])
+                courant = flat_list[ind[0] + 1]
+                flat_list = np.delete(flat_list, [ind[0], ind[0] + 1])
+            elif ind[0] % 2 == 1:
+                root.append(flat_list[ind[0] - 1])
+                courant = flat_list[ind[0] - 1]
+                flat_list = np.delete(flat_list, [ind[0], ind[0] - 1])
+    return root
+

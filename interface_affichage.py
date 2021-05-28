@@ -40,9 +40,13 @@ class Work_area_Window(Frame):
         menu.config(menu=menu.menu, )
         #menu.menu.add_command(label="test")
         affichage_menu = Menu(menu.menu, tearoff="false")
+        affichage_menu_heur_spec = Menu(menu.menu, tearoff="false")
         menu.menu.add_cascade(label="Méthode exacte", menu=affichage_menu, )
+        menu.menu.add_cascade(label="heuristiques spécifiques", menu=affichage_menu_heur_spec, )
+
         plot = Menu(affichage_menu, tearoff="false", )
         affichage_menu.add_cascade(label="Plot", menu=plot)
+        affichage_menu_heur_spec.add_command(label="Plus proche voisin (PPV)",command=self.show_ppv)
         plot.add_command(label="Programmation dynamique", command=self.show_programmation_dynamique)
         plot.add_command(label="Bunch and bound", command=self.show_bunch_and_bound)
         plot.add_command(label="Bunch and bound amélioré", command=self.show_bunch_and_bound_am)
@@ -61,6 +65,8 @@ class Work_area_Window(Frame):
         compare_menu.add_command(label="Temps d'éxecution", command=self.compare_methode_exactes)
         menu2.grid(row=0, column=3, padx=15, pady=5)
         frame.grid(row=0, column=0, sticky=N + S + E + W)
+
+    def show_ppv(self):
 
     def show_programmation_dynamique(self):
 
