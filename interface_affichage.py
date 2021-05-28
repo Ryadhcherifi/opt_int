@@ -2,7 +2,6 @@ from tkinter import *
 from tkinter import ttk
 from functools import partial
 from kernel import *
-from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class Work_area_Window(Frame):
@@ -26,6 +25,7 @@ class Work_area_Window(Frame):
         self.affichage = Frame(self)
         self.affichage.grid(row=1, column=0, sticky=N + S + E + W)
         self.graph_frame = ScrollFrame(self.affichage)
+
         #Grid.rowconfigure(self.graph_frame.frame, 0, weight=1)
         #Grid.columnconfigure(self.graph_frame.frame, 0, weight=1)
         #self.graph_frame.grid(row=1, column=0, sticky=N + S + E + W)
@@ -47,6 +47,10 @@ class Work_area_Window(Frame):
         plot = Menu(affichage_menu, tearoff="false", )
         affichage_menu.add_cascade(label="Plot", menu=plot)
         affichage_menu_heur_spec.add_command(label="Plus proche voisin (PPV)",command=self.show_ppv)
+        affichage_menu_heur_spec.add_command(label="2-OPT",command=self.show_2opt)
+        affichage_menu_heur_spec.add_command(label="3-OPT",command=self.show_3opt)
+
+
         plot.add_command(label="Programmation dynamique", command=self.show_programmation_dynamique)
         plot.add_command(label="Bunch and bound", command=self.show_bunch_and_bound)
         plot.add_command(label="Bunch and bound amélioré", command=self.show_bunch_and_bound_am)
@@ -67,6 +71,67 @@ class Work_area_Window(Frame):
         frame.grid(row=0, column=0, sticky=N + S + E + W)
 
     def show_ppv(self):
+             None
+    def show_2opt(self):
+        frame = self.graph_frame.frame
+        labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")
+
+        labelChoix.pack()
+        listemethodes = ["sequetielle","Random", "plus proche voisin", "moindre cout"]
+        listeCombo = ttk.Combobox(frame, values=listemethodes)
+        listeCombo.bind('<<ComboboxSelected>>', self.choix_box_2opt)
+        listeCombo.current(0)
+
+        listeCombo.pack()
+
+
+        # frame.pack()
+        self.index = self.index + 1
+        self.graph_frame.update()
+
+    def choix_box_2opt(self,event):
+        methode=event.widget.get()
+        distances = self.file.distances
+        cout_methode=0
+        cout_2opt=0
+        temps_2opt=0
+        temps_cumule=0
+
+        if methode=="Random":
+            resu2=Rand(0,np.size(distances,0)-1,distances)
+            resu = two_opt2(resu2[2], distances)
+            cout_methode=resu2[0]
+            cout_2opt=resu[0]
+            temps_2opt=resu[2]
+            temps_cumule=temps_2opt+resu2[1]
+
+        elif methode=="sequetielle":
+            li=[]
+            for i in range (np.size(distances,0) ) :
+                li.append(i)
+            li.append(0)
+            resu=two_opt2(li,distances)
+            cout_methode = cost(distances,np.array(li))
+            cout_2opt = resu[0]
+            temps_2opt = resu[2]
+            temps_cumule = temps_2opt
+
+        elif methode=="plus proche voisin":
+            resu2=ppv(1,distances)
+            resu=two_opt2(list(np.array(resu2[0])-1),distances)
+
+        else:
+            resu2=moindre_cout(distances)
+            print(resu2[2])
+            resu=two_opt2(resu2[2],distances)
+            cout_methode = resu2[0]
+            cout_2opt = resu[0]
+            temps_2opt = resu[2]
+            temps_cumule = temps_2opt + resu2[1]
+        lst=[("Cout 2-opt",cout_2opt),("Cout methode generatrice",cout_methode)]
+        #Table(self.graph_frame.frame,2,2)
+
+    def show_3opt(self):
              None
     def show_programmation_dynamique(self):
 
@@ -179,4 +244,6 @@ class ScrollFrame:
         if self.frame.winfo_reqheight() != self.canvas.winfo_height():
             # update the canvas's width to fit the inner frame
             self.canvas.config(height=self.frame.winfo_reqheight())
+
+
 
