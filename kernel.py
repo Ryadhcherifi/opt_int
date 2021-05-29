@@ -15,8 +15,8 @@ class File:
 
         def __init__(self, file_path=None):
            self.file_path=file_path
-           self.points,self.nb_villes=load_points_1(self.file_path)
-           self.distances=load_distances_1(self.points,self.nb_villes)
+           self.points,self.nb_villes,geo=load_points_1(self.file_path)
+           self.distances=load_distances_1(self.points,self.nb_villes,geo=geo)
 
 def load_points_1(file_name):
     file = open(file_name, 'r')
@@ -30,6 +30,7 @@ def load_points_1(file_name):
     test=file.readline().strip()
     #print(test)
     #print(test == "EDGE_WEIGHT_FORMAT: FUNCTION")
+    geo = False
     while test != "NODE_COORD_SECTION":
         test = file.readline().strip()
 
@@ -37,45 +38,61 @@ def load_points_1(file_name):
 
     points = []
     N = int(Dimension)
-    pi = 3.141592
-    for i in range(0, int(Dimension)):
-        x, y = file.readline().strip().split()[1:]
-        degx = int(float(x))
-        minx = float(x) - degx
-        radx = pi * (degx + 5.0 * minx / 3.0) / 180.0
+    if (EdgeWeightType == "GEO"):
+        geo = True
+        pi = 3.141592
+        for i in range(0, int(Dimension)):
+            x, y = file.readline().strip().split()[1:]
+            degx = int(float(x))
+            minx = float(x) - degx
+            radx = pi * (degx + 5.0 * minx / 3.0) / 180.0
 
-        degy = int(float(y))
-        miny = float(y) - degy
-        rady = pi * (degy + 5.0 * miny / 3.0) / 180.0
+            degy = int(float(y))
+            miny = float(y) - degy
+            rady = pi * (degy + 5.0 * miny / 3.0) / 180.0
 
-        points.append([radx, rady])
+            points.append([radx, rady])
+    else :
+        for i in range(0, int(Dimension)):
+            x, y = file.readline().strip().split()[1:]
+            points.append([float(x), float(y)])
+
     file.close()
-    return points, N
+    return points, N,geo
 
 
-def load_distances_1(points, N):
+def load_distances_1(points, N,geo=False):
 
-    distances = np.full(shape=(N, N),fill_value=-1,dtype=int)
-    mini = 10000
-    rrr = 6378.388
-    pi = 3.141592
+    if geo :
+        distances = np.full(shape=(N, N),fill_value=-1,dtype=int)
+        mini = 10000
+        rrr = 6378.388
+        pi = 3.141592
 
-    q1 = 0
-    q2 = 0
-    q3 = 0
+        q1 = 0
+        q2 = 0
+        q3 = 0
 
-    for i in range(N):
-        for j in range(N):
-            if (i != j):
-                q1 = np.cos(points[i][1] - points[j][1])
-                q2 = np.cos(points[i][0] - points[j][0])
-                q3 = np.cos(points[i][0] + points[j][0])
-                distances[i, j] = (int)(rrr * np.arccos(0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)) + 1.0)
-                # distances[i, j] = np.sqrt(
-                # np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
-                if mini > distances[i, j]:
-                    mini = distances[i, j]
-    print("************************************ max = ", mini)
+        for i in range(N):
+            for j in range(N):
+                if (i != j):
+                    q1 = np.cos(points[i][1] - points[j][1])
+                    q2 = np.cos(points[i][0] - points[j][0])
+                    q3 = np.cos(points[i][0] + points[j][0])
+                    distances[i, j] = (int)(rrr * np.arccos(0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)) + 1.0)
+                    # distances[i, j] = np.sqrt(
+                    # np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
+                    if mini > distances[i, j]:
+                        mini = distances[i, j]
+        print("************************************ max = ", mini)
+    else :
+        N = len(points)
+        distances = np.zeros((N, N), "double")
+        for i in range(N):
+            for j in range(N):
+                if (i != j):
+                    distances[i, j] = np.sqrt(
+                        np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
     #print(distances)
     return distances
 
