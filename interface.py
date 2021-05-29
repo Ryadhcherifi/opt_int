@@ -78,7 +78,7 @@ def main():
     Grid.rowconfigure(root, 0, weight=1)
     Grid.columnconfigure(root, 0, weight=1)
     app = App(master=root)
-    app.pack(fill="both", expand="true")
+    app.pack()
     root.mainloop()
 
 
