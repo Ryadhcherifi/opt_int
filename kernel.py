@@ -5,15 +5,18 @@ import copy
 import time
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import pandas as pd
+import ast
 import random
+import pandas as pd
 
 
 class File:
 
         def __init__(self, file_path=None):
            self.file_path=file_path
-           self.points,self.nb_villes=load_points_1(self.file_path)
-           self.distances=load_distances_1(self.points,self.nb_villes)
+           self.points,self.nb_villes,geo=load_points_1(self.file_path)
+           self.distances=load_distances_1(self.points,self.nb_villes,geo=geo)
 
 def load_points_1(file_name):
     file = open(file_name, 'r')
@@ -27,51 +30,69 @@ def load_points_1(file_name):
     test=file.readline().strip()
     #print(test)
     #print(test == "EDGE_WEIGHT_FORMAT: FUNCTION")
+    geo = False
     while test != "NODE_COORD_SECTION":
         test = file.readline().strip()
+
         #print(test)
 
     points = []
     N = int(Dimension)
-    pi = 3.141592
-    for i in range(0, int(Dimension)):
-        x, y = file.readline().strip().split()[1:]
-        degx = int(float(x))
-        minx = float(x) - degx
-        radx = pi * (degx + 5.0 * minx / 3.0) / 180.0
+    if (EdgeWeightType == "GEO"):
+        geo = True
+        pi = 3.141592
+        for i in range(0, int(Dimension)):
+            x, y = file.readline().strip().split()[1:]
+            degx = int(float(x))
+            minx = float(x) - degx
+            radx = pi * (degx + 5.0 * minx / 3.0) / 180.0
 
-        degy = int(float(y))
-        miny = float(y) - degy
-        rady = pi * (degy + 5.0 * miny / 3.0) / 180.0
+            degy = int(float(y))
+            miny = float(y) - degy
+            rady = pi * (degy + 5.0 * miny / 3.0) / 180.0
 
-        points.append([radx, rady])
+            points.append([radx, rady])
+    else :
+        for i in range(0, int(Dimension)):
+            x, y = file.readline().strip().split()[1:]
+            points.append([float(x), float(y)])
+
     file.close()
-    return points, N
+    return points, N,geo
 
 
-def load_distances_1(points, N):
+def load_distances_1(points, N,geo=False):
 
-    distances = np.full(shape=(N, N),fill_value=-1,dtype=int)
-    mini = 10000
-    rrr = 6378.388
-    pi = 3.141592
+    if geo :
+        distances = np.full(shape=(N, N),fill_value=-1,dtype=int)
+        mini = 10000
+        rrr = 6378.388
+        pi = 3.141592
 
-    q1 = 0
-    q2 = 0
-    q3 = 0
+        q1 = 0
+        q2 = 0
+        q3 = 0
 
-    for i in range(N):
-        for j in range(N):
-            if (i != j):
-                q1 = np.cos(points[i][1] - points[j][1])
-                q2 = np.cos(points[i][0] - points[j][0])
-                q3 = np.cos(points[i][0] + points[j][0])
-                distances[i, j] = (int)(rrr * np.arccos(0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)) + 1.0)
-                # distances[i, j] = np.sqrt(
-                # np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
-                if mini > distances[i, j]:
-                    mini = distances[i, j]
-    print("************************************ max = ", mini)
+        for i in range(N):
+            for j in range(N):
+                if (i != j):
+                    q1 = np.cos(points[i][1] - points[j][1])
+                    q2 = np.cos(points[i][0] - points[j][0])
+                    q3 = np.cos(points[i][0] + points[j][0])
+                    distances[i, j] = (int)(rrr * np.arccos(0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)) + 1.0)
+                    # distances[i, j] = np.sqrt(
+                    # np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
+                    if mini > distances[i, j]:
+                        mini = distances[i, j]
+        print("************************************ max = ", mini)
+    else :
+        N = len(points)
+        distances = np.zeros((N, N), "double")
+        for i in range(N):
+            for j in range(N):
+                if (i != j):
+                    distances[i, j] = np.sqrt(
+                        np.square(points[i][0] - points[j][0]) + np.square(points[i][1] - points[j][1]))
     #print(distances)
     return distances
 
@@ -583,7 +604,7 @@ def three_opt(route, distances):
     cout = cost(distances, best)
     best = np.resize(best, np.size(best, 0) + 1)
     best[np.size(best, 0) - 1] = best[0]
-    timef =  format(time2-time1, '.4f')
+    timef =  float(format(time2-time1, '.4f'))
     return cout, list(best), timef
 
 
@@ -640,6 +661,7 @@ def ppv_gen(distances,stats=False):
             tour_optimal = tour
     time2 = time.time()
     timef =  format(time2-time1, '.4f')
+    timef =float(timef)
     if stats :
         return tour_optimal, cout_optimal, timef,results
     else :
@@ -675,7 +697,7 @@ def ppv(debut, distances, temps=False):
     cout += distances[last - 1, debut - 1]
     visite.append(debut)
     time2 = time.time()
-    timef =  format(time2-time1, '.4f')
+    timef =  float(format(time2-time1, '.4f'))
     if temps:
         return visite, cout, timef
     else:
@@ -781,7 +803,7 @@ def tolist(tab):
     return root
 
 
-def fichier_save(nom_fichier, methode, instance, parametre, cout, temps, temps_cumule):
+def fichier_save(nom_fichier, methode, instance, parametre, cout, tour_optimal, temps, temps_cumule):
     df = pd.read_csv(nom_fichier)
     k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
     if (k.empty):
@@ -789,31 +811,33 @@ def fichier_save(nom_fichier, methode, instance, parametre, cout, temps, temps_c
             "méthode": methode,
             "instance": instance,
             "parametre": parametre,
-            "cout": str(cout),
-            "temps": str(temps),
-            "temps_cumulé": str(temps_cumule)
+            "cout": cout,
+            "tour_optimal": tour_optimal,
+            "temps": temps,
+            "temps_cumulé": temps_cumule
         }
         df = df.append(data2, ignore_index=True)
         df.to_csv(nom_fichier, index=False)
     else:
         index = k.index.tolist()[0]
-        # k[""]
         df.loc[index, ["cout", "temps", "temps_cumulé"]] = [str(cout), str(temps), str(temps_cumule)]
-        # df.loc[0:2,['Num','NAME']] = [100,'Python']
-
-    print(df)
 
 
 def get_results(nom_fichier, methode, instance, parametre):
     df = pd.read_csv(nom_fichier)
-    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
+    df["parametre"] = df["parametre"].astype(str)
+    # print(nom_fichier,methode,instance,parametre)
+    # (df['méthode'] == methode) & (df['instance'] == instance) &
+    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == str(parametre))]
+    # print(df)
     if not (k.empty):
         temps = float(k["temps"])
         cout = float(k["cout"])
         temps_cum = float(k["temps_cumulé"])
-        return cout, temps, temps_cum
+        tour_optimal = ast.literal_eval((k["tour_optimal"]).tolist()[0])
+        return cout, tour_optimal, temps, temps_cum
     else:
-        return None, None, None
+        return None, None, None, None
 
 
 def Rand(start, end,distances):

@@ -1,0 +1,4 @@
+sol initiale = PPV | instance = pr439.tsp | amelioration 100.0 | cout=114321.522737059 | temps=0.02695100000000039 | PAS_AUGMENTATION=0.75 | PAS_DIMINUTION=1.0 | MAX_ITERATION=18 | TAILLE_LISTE_TABOU_MAX=80 | taille_voisinage=15 | TAILLE_VOISINAGE_MIN=15 | TAILLE_VOISINAGE_MAX=25 |NB_ESSAIS=25
+******************************************************************************************************************
+sol initiale = PPV | instance = pr439.tsp | amelioration 104.32585283505989 | cout=109581.20123666983 | temps=52.2633226 | PAS_AUGMENTATION=0.75 | PAS_DIMINUTION=1.0 | MAX_ITERATION=18000 | TAILLE_LISTE_TABOU_MAX=80 | taille_voisinage=15.75 | TAILLE_VOISINAGE_MIN=15 | TAILLE_VOISINAGE_MAX=25 |NB_ESSAIS=25
+******************************************************************************************************************
