@@ -807,7 +807,11 @@ def fichier_save(nom_fichier, methode, instance, parametre, cout, tour_optimal, 
 
 def get_results(nom_fichier, methode, instance, parametre):
     df = pd.read_csv(nom_fichier)
-    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
+    df["parametre"] = df["parametre"].astype(str)
+    # print(nom_fichier,methode,instance,parametre)
+    # (df['méthode'] == methode) & (df['instance'] == instance) &
+    k = df.loc[(df["parametre"] == str(1))]
+    print(k)
     if not (k.empty):
         temps = float(k["temps"])
         cout = float(k["cout"])
