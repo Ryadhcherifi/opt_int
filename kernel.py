@@ -5,6 +5,8 @@ import copy
 import time
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import pandas as pd
+import ast
 import random
 import pandas as pd
 
@@ -30,6 +32,7 @@ def load_points_1(file_name):
     #print(test == "EDGE_WEIGHT_FORMAT: FUNCTION")
     while test != "NODE_COORD_SECTION":
         test = file.readline().strip()
+
         #print(test)
 
     points = []
@@ -584,7 +587,7 @@ def three_opt(route, distances):
     cout = cost(distances, best)
     best = np.resize(best, np.size(best, 0) + 1)
     best[np.size(best, 0) - 1] = best[0]
-    timef =  format(time2-time1, '.4f')
+    timef =  float(format(time2-time1, '.4f'))
     return cout, list(best), timef
 
 
@@ -641,6 +644,7 @@ def ppv_gen(distances,stats=False):
             tour_optimal = tour
     time2 = time.time()
     timef =  format(time2-time1, '.4f')
+    timef =float(timef)
     if stats :
         return tour_optimal, cout_optimal, timef,results
     else :
@@ -676,7 +680,7 @@ def ppv(debut, distances, temps=False):
     cout += distances[last - 1, debut - 1]
     visite.append(debut)
     time2 = time.time()
-    timef =  format(time2-time1, '.4f')
+    timef =  float(format(time2-time1, '.4f'))
     if temps:
         return visite, cout, timef
     else:
@@ -782,7 +786,7 @@ def tolist(tab):
     return root
 
 
-def fichier_save(nom_fichier, methode, instance, parametre, cout, temps, temps_cumule):
+def fichier_save(nom_fichier, methode, instance, parametre, cout, tour_optimal, temps, temps_cumule):
     df = pd.read_csv(nom_fichier)
     k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
     if (k.empty):
@@ -790,31 +794,33 @@ def fichier_save(nom_fichier, methode, instance, parametre, cout, temps, temps_c
             "méthode": methode,
             "instance": instance,
             "parametre": parametre,
-            "cout": str(cout),
-            "temps": str(temps),
-            "temps_cumulé": str(temps_cumule)
+            "cout": cout,
+            "tour_optimal": tour_optimal,
+            "temps": temps,
+            "temps_cumulé": temps_cumule
         }
         df = df.append(data2, ignore_index=True)
         df.to_csv(nom_fichier, index=False)
     else:
         index = k.index.tolist()[0]
-        # k[""]
         df.loc[index, ["cout", "temps", "temps_cumulé"]] = [str(cout), str(temps), str(temps_cumule)]
-        # df.loc[0:2,['Num','NAME']] = [100,'Python']
-
-    print(df)
 
 
 def get_results(nom_fichier, methode, instance, parametre):
     df = pd.read_csv(nom_fichier)
-    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
+    df["parametre"] = df["parametre"].astype(str)
+    # print(nom_fichier,methode,instance,parametre)
+    # (df['méthode'] == methode) & (df['instance'] == instance) &
+    k = df.loc[(df["parametre"] == str(1))]
+    print(k)
     if not (k.empty):
         temps = float(k["temps"])
         cout = float(k["cout"])
         temps_cum = float(k["temps_cumulé"])
-        return cout, temps, temps_cum
+        tour_optimal = ast.literal_eval((k["tour_optimal"]).tolist()[0])
+        return cout, tour_optimal, temps, temps_cum
     else:
-        return None, None, None
+        return None, None, None, None
 
 
 def Rand(start, end,distances):
