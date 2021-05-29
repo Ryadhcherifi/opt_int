@@ -11,7 +11,7 @@ class Work_area_Window(Frame):
         Frame.__init__(self, parent)
         self.paramaters={}
         self.default_params_init()
-        self.index=1
+        self.index=0
         self.project_label=StringVar()
         self.project_label.set("")
         self.file_path = file.file_path
@@ -50,6 +50,7 @@ class Work_area_Window(Frame):
         plot = Menu(affichage_menu, tearoff="false", )
         affichage_menu.add_cascade(label="Plot", menu=plot)
         affichage_menu_heur_spec.add_command(label="Plus proche voisin (PPV)",command=self.show_ppv)
+        affichage_menu_heur_spec.add_command(label="Moindre cout",command=self.show_moindre_cout)
         affichage_menu_heur_spec.add_command(label="2-OPT",command=self.show_2opt)
         affichage_menu_heur_spec.add_command(label="3-OPT",command=self.show_3opt)
 
@@ -77,7 +78,7 @@ class Work_area_Window(Frame):
     def default_params_init(self):
 
         ppv = {
-            "depart": 0
+            "depart": 1
         }
         self.paramaters["ppv"]=ppv
         #print(self.paramaters)
@@ -87,28 +88,67 @@ class Work_area_Window(Frame):
             params = self.paramaters.get("ppv")
             None
 
+    def show_moindre_cout(self):
+        frame = self.graph_frame.frame
+        frame_mc = Frame(frame)
+        frame_mc.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index += 1
+        Grid.rowconfigure(frame_mc, 0, weight=1)
+        Grid.columnconfigure(frame_mc, 0, weight=1)
+        Grid.rowconfigure(frame_mc, 0, weight=1)
+        Grid.columnconfigure(frame_mc, 0, weight=1)
+        frame_mc_result = Frame(frame_mc)
+        frame_mc_result.pack(anchor="w")
+        cout, time, route = moindre_cout(self.file.distances)
+        Label(frame_mc_result,text="\n*** Avec la méthode moindre cout ***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
+        Label(frame_mc_result,text="    Cout de la solution généré:"+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
+        Label(frame_mc_result,text="    Temps d'éxecution:"+str(time)).grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
+        self.graph_frame.update()
+
     def show_ppv(self):
         frame = self.graph_frame.frame
         frame_ppv = Frame(frame)
-        frame_ppv.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
+        frame_ppv.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index += 1
         Grid.rowconfigure(frame_ppv, 0, weight=1)
         Grid.columnconfigure(frame_ppv, 0, weight=1)
         Grid.rowconfigure(frame, 0, weight=1)
         Grid.columnconfigure(frame, 0, weight=1)
-        print(self.paramaters)
+
         depart =  self.paramaters["ppv"]["depart"]
-        depart_tk=IntVar(depart)
+        depart_tk=IntVar()
+        depart_tk.set(depart)
         frame_ppv_params = Frame(frame_ppv)
-        frame_ppv_params.pack()
+        frame_ppv_params.pack(anchor="w")
         Label(frame_ppv_params,text="Ville de départ:").grid(column=0, columnspan=1, row=0,padx=10)
         Entry(frame_ppv_params,textvariable=depart_tk).grid(column=1, columnspan=1, row=0,padx=10)
+        Button(frame_ppv_params, text="Calculer", command=partial(self.show_ppv_result,depart_tk,frame_ppv)).grid(column=2, columnspan=1, row=0,padx=10)
+        Button(frame_ppv_params, text="PPV Généralisée", command=partial(self.show_ppv_gen_result,frame_ppv)).grid(column=3, columnspan=1, row=0,padx=10)
         self.graph_frame.update()
-        Button(frame_ppv_params, text="Calculer", command=partial(self.show_ppv_result,depart_tk)).grid(column=2, columnspan=1, row=0,padx=10)
-        Button(frame_ppv_params, text="PPV Généralisée", command=None).grid(column=3, columnspan=1, row=0,padx=10)
 
+    def show_ppv_gen_result(self,frame_ppv):
+        frame_ppv_result = Frame(frame_ppv)
+        frame_ppv_result.pack(anchor="w")
+        tour_optimal, cout, time, stats=ppv_gen(self.file.distances,stats = True)
+        Label(frame_ppv_result,text="\n***Le plus proche voisin avec toutes les villes comme ville de départ***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
+        Label(frame_ppv_result,text="       Cout de la solution: "+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
+        Label(frame_ppv_result,text="       Temps d'éxecution de l'algorithme': "+str(time)+" s").grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
+        frame_plot = Frame(frame_ppv)
+        fig = plot_ppv_gen(len(tour_optimal), stats)
+        fig_tk =FigureCanvasTkAgg(fig, frame_plot).get_tk_widget()
+        fig_tk.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W,padx=15, pady=5)
+        frame_plot.pack(anchor="w")
+    def show_ppv_result(self,depart_tk,frame_ppv):
+        print("Depart="+str(depart_tk.get()))
+        debut = depart_tk.get()
+        print(self.file.distances)
+        visite, cout, time =ppv(debut,self.file.distances,temps=True)
+        frame_ppv_result = Frame(frame_ppv)
+        frame_ppv_result.pack(anchor="w")
+        Label(frame_ppv_result,text="\n***Le plus proche voisin avec "+str(debut)+" comme ville de départ donne:***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
+        Label(frame_ppv_result,text="       Cout de la solution: "+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
+        Label(frame_ppv_result,text="       Temps d'éxecution de l'algorithme: "+str(time)+" s").grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
 
-    def show_ppv_result(self,depart_tk):
-                 print("Depart="+str(depart_tk.get()))
     def show_2opt(self):
         frame = self.graph_frame.frame
         labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")

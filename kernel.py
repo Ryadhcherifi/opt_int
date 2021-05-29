@@ -202,6 +202,15 @@ def courbes_methodes_exactes(Graphe, nb_villes,points):
     return fig
     #plt.show()  # affiche la figure a l'ecran
 
+def plot_ppv_gen(n,stats):
+    y = np.array(stats)
+    x = np.array(range(1,n))
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(x, y, label='Cout en fonction des villes de départs')
+    ax.set_ylabel('Cout du tour')
+    ax.set_xlabel('Numéro de la ville')
+    return fig
+
 def eliminerSousTournee(ens_aretes, matrice):
     for i in range(0, matrice.shape[0]):
         for j in range(0, matrice.shape[1]):
@@ -574,7 +583,8 @@ def three_opt(route, distances):
     cout = cost(distances, best)
     best = np.resize(best, np.size(best, 0) + 1)
     best[np.size(best, 0) - 1] = best[0]
-    return cout, list(best), time2 - time1
+    timef =  format(time2-time1, '.4f')
+    return cout, list(best), timef
 
 
 def two_opt2(route, cost_mat):
@@ -610,15 +620,18 @@ def two_opt2(route, cost_mat):
     cout = cost(cost_mat, best)
     best = np.resize(best, np.size(best, 0) + 1)
     best[np.size(best, 0) - 1] = best[0]
-    return cout, list(best), time2 - time1
+    timef =  format(time2-time1, '.4f')
+    return cout, list(best), timef
 
 
-def ppv_gen(distances):
+def ppv_gen(distances,stats=False):
     cout_optimal = None
+    results =[]
     N = distances.shape[0]
     time1 = time.time()
     for i in range(N):
         tour, cout = ppv(i + 1, distances)
+        results.append(cout)
         if (cout_optimal is None):
             cout_optimal = cout
             tour_optimal = tour
@@ -626,7 +639,11 @@ def ppv_gen(distances):
             cout_optimal = cout
             tour_optimal = tour
     time2 = time.time()
-    return tour_optimal, cout_optimal, time2 - time1
+    timef =  format(time2-time1, '.4f')
+    if stats :
+        return tour_optimal, cout_optimal, timef,results
+    else :
+        return tour_optimal, cout_optimal, timef
 
 
 def ppv(debut, distances, temps=False):
@@ -658,8 +675,9 @@ def ppv(debut, distances, temps=False):
     cout += distances[last - 1, debut - 1]
     visite.append(debut)
     time2 = time.time()
+    timef =  format(time2-time1, '.4f')
     if temps:
-        return visite, cout, time2 - time1
+        return visite, cout, timef
     else:
         return visite, cout
 
@@ -688,7 +706,8 @@ def moindre_cout(distances):
                 if len(arete) == 2 * n:
                     break
     finishTime = time.time()
-    return dist_min, finishTime - startTime, list(np.array(tolist(arete)) - 1)
+    timef =  format(finishTime - startTime, '.4f')
+    return dist_min, timef, list(np.array(tolist(arete)) - 1)
 
 
 def cycle(aret, arr, n, m):
@@ -760,6 +779,42 @@ def tolist(tab):
                 courant = flat_list[ind[0] - 1]
                 flat_list = np.delete(flat_list, [ind[0], ind[0] - 1])
     return root
+
+
+def fichier_save(nom_fichier, methode, instance, parametre, cout, temps, temps_cumule):
+    df = pd.read_csv(nom_fichier)
+    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
+    if (k.empty):
+        data2 = {
+            "méthode": methode,
+            "instance": instance,
+            "parametre": parametre,
+            "cout": str(cout),
+            "temps": str(temps),
+            "temps_cumulé": str(temps_cumule)
+        }
+        df = df.append(data2, ignore_index=True)
+        df.to_csv(nom_fichier, index=False)
+    else:
+        index = k.index.tolist()[0]
+        # k[""]
+        df.loc[index, ["cout", "temps", "temps_cumulé"]] = [str(cout), str(temps), str(temps_cumule)]
+        # df.loc[0:2,['Num','NAME']] = [100,'Python']
+
+    print(df)
+
+
+def get_results(nom_fichier, methode, instance, parametre):
+    df = pd.read_csv(nom_fichier)
+    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
+    if not (k.empty):
+        temps = float(k["temps"])
+        cout = float(k["cout"])
+        temps_cum = float(k["temps_cumulé"])
+        return cout, temps, temps_cum
+    else:
+        return None, None, None
+
 
 def Rand(start, end,distances):
     time1 = time.time()
