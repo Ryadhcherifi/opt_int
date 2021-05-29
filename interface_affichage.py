@@ -1,3 +1,4 @@
+import time as time
 from tkinter import *
 from tkinter import ttk
 from functools import partial
@@ -312,6 +313,8 @@ class Work_area_Window(Frame):
         for a in range(N):
             pheromone[a][a]=0
             pheromone2[a][a]=0
+        t1=time.time()
+
         for t in range(it) :    
             for k in range(l) :
                 allowed=[i for i in range(N)]
@@ -343,8 +346,9 @@ class Work_area_Window(Frame):
             i=j
         chemin[N-1]=0
         cout=cout+distances[i][0]
-        Label(frame_aco_params,text="Chemin : "+str(chemin)).grid(column=0, columnspan=10, row=8,padx=10)
-        Label(frame_aco_params,text="Cout : "+str(cout)).grid(column=0, columnspan=1, row=9,padx=10)
+        t2=time.time()
+        Label(frame_aco_params,text="Cout : "+str(cout)).grid(column=0, columnspan=1, row=8,padx=10)
+        Label(frame_aco_params,text="Temps : "+str(t2-t1)).grid(column=0, columnspan=1, row=9,padx=10)
 
         print(chemin)
         print(cout)
