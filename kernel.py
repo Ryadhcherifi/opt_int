@@ -810,8 +810,8 @@ def get_results(nom_fichier, methode, instance, parametre):
     df["parametre"] = df["parametre"].astype(str)
     # print(nom_fichier,methode,instance,parametre)
     # (df['méthode'] == methode) & (df['instance'] == instance) &
-    k = df.loc[(df["parametre"] == str(parametre))]
-    print(k)
+    k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == str(parametre))]
+    # print(df)
     if not (k.empty):
         temps = float(k["temps"])
         cout = float(k["cout"])
