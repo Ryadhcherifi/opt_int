@@ -155,7 +155,7 @@ class Work_area_Window(Frame):
         Grid.columnconfigure(frame, 0, weight=1)
         Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !").grid(column=0, columnspan=1, row=0,padx=10)
 
-        listemethodes = ["sequetielle","Random", "plus proche voisin","plus proche voisin generalisé" ,"moindre cout"]
+        listemethodes = ["sequetielle","Random", "ppv","ppv generalisé" ,"moindre cout"]
         listeCombo = ttk.Combobox(frame,state="readonly", values=listemethodes)
         listeCombo.grid(column=1, columnspan=1, row=0,padx=10)
         listeCombo.bind('<<ComboboxSelected>>', self.choix_box_2opt)
@@ -167,10 +167,7 @@ class Work_area_Window(Frame):
     def choix_box_2opt(self,event):
         methode=event.widget.get()
         distances = self.file.distances
-        cout_methode=0
-        cout_2opt=0
-        temps_2opt=0
-        temps_cumule=0
+
         print(methode)
         if methode=="Random":
             resu2=Rand(0,np.size(distances,0)-1,distances)
@@ -178,7 +175,9 @@ class Work_area_Window(Frame):
             cout_methode=resu2[0]
             cout_2opt=resu[0]
             temps_2opt=resu[2]
-            temps_cumule=temps_2opt+resu2[1]
+            temps_cumule=float(resu[2])+resu2[1]
+            param=','.join([str(elem) for elem in resu2[2]])
+
 
         elif methode=="sequetielle":
             li=[]
@@ -190,52 +189,66 @@ class Work_area_Window(Frame):
             cout_2opt = resu[0]
             temps_2opt = resu[2]
             temps_cumule = temps_2opt
+            param=','.join([str(elem) for elem in li])
 
-        elif methode == "plus proche voisin generalisé":
+
+        elif methode == "ppv generalisé":
             resu2 = ppv_gen(distances)
             resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
             cout_methode = resu2[1]
             cout_2opt = resu[0]
             temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[2]
+            temps_cumule = float(temps_2opt) + float(resu2[2])
+            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
 
-        elif methode=="plus proche voisin":
+
+        elif methode=="ppv":
             resu2=ppv(1,distances,True)
             resu=two_opt2(list(np.array(resu2[0])-1),distances)
             cout_methode = resu2[1]
             cout_2opt = resu[0]
             temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[2]
+            temps_cumule = float(temps_2opt) + float(resu2[2])
+            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
+
 
         else:
-            resu2=moindre_cout(distances)
-            print(resu2[2])
-            resu=two_opt2(resu2[2],distances)
-            cout_methode = resu2[0]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[1]
+            cout_methode,temps_methode,temps_cumule,param=get_results("opt_ppv_gene.csv","moindre cout",self.file.file_path,"")
+            if cout_methode==None:
+                resu2=moindre_cout(distances)
+            else:
+                resu2=[cout_methode,temps_methode,param]
+            cout_methode,temps_2opt,temps_cumule,param=get_results("opt_ppv_gene.csv","moindre cout",self.file.file_path,"")
+            if cout_methode==None:
+                resu=two_opt2(resu2[2],distances)
+                cout_methode = resu2[0]
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[1])
+            param=str(resu2[2])
+
         frame =self.graph_frame.frame
-        frame_ppv = Frame(frame)
-        frame_ppv.grid(columnspan=2,row=1, sticky=N + S + E + W, padx=15, pady=5)
-        Grid.rowconfigure(frame_ppv, 0, weight=1)
-        Grid.columnconfigure(frame_ppv, 0, weight=1)
+        frame_opt = Frame(frame)
+        frame_opt.grid(columnspan=2,row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index=self.index+1
+        Grid.rowconfigure(frame_opt, 0, weight=1)
+        Grid.columnconfigure(frame_opt, 0, weight=1)
+        #frame_ppv=Frame(frame2)
+        #frame_ppv.pack()
+        Label(frame_opt, text="Cout de l'heuristique 2-OPT avec : "+ methode,font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
 
-        Label(frame_ppv, text="Cout de l'heuristique 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
-        Label(frame_ppv, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text="Temps d'execution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
 
-        Label(frame_ppv, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
-        Label(frame_ppv, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
-        Label(frame_ppv, text="Temps d'execution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
-        Label(frame_ppv, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
 
-        Label(frame_ppv, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
-        Label(frame_ppv, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
-
-        Label(frame_ppv,text="Gain en cout de la solution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
-        Label(frame_ppv, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
-
-
+        Label(frame_opt,text="Gain en cout de la solution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
+        Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
+        fichier_save("opt_ppv_gene.csv","2-OPT",self.file.file_path,param,cout_2opt,temps_2opt,temps_cumule)
 
     def show_3opt(self):
         frame = self.graph_frame.frame
@@ -243,7 +256,7 @@ class Work_area_Window(Frame):
         Grid.columnconfigure(frame, 0, weight=1)
         Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !").grid(column=0, columnspan=1, row=0,padx=10)
 
-        listemethodes = ["sequetielle","Random", "plus proche voisin","plus proche voisin generalisé", "moindre cout"]
+        listemethodes = ["sequetielle","Random", "ppv","ppv generalisé", "moindre cout"]
         listeCombo = ttk.Combobox(frame, values=listemethodes)
         listeCombo.grid(column=1, columnspan=1, row=0,padx=10)
 
@@ -256,18 +269,16 @@ class Work_area_Window(Frame):
     def choix_box_3opt(self,event):
         methode=event.widget.get()
         distances = self.file.distances
-        cout_methode=0
-        cout_2opt=0
-        temps_2opt=0
-        temps_cumule=0
         print(methode)
         if methode=="Random":
             resu2=Rand(0,np.size(distances,0)-1,distances)
+            cout_methode = resu2[0]
             resu = three_opt(resu2[2], distances)
-            cout_methode=resu2[0]
-            cout_2opt=resu[0]
-            temps_2opt=resu[2]
-            temps_cumule=temps_2opt+resu2[1]
+            cout_3opt = resu[0]
+            temps_3opt = resu[2]
+            temps_cumule = float(temps_3opt) + resu2[1]
+            param = ','.join([str(elem) for elem in resu2[2]])
+
 
         elif methode=="sequetielle":
             li=[]
@@ -276,55 +287,62 @@ class Work_area_Window(Frame):
             li.append(0)
             resu=three_opt(li,distances)
             cout_methode = cost(distances,np.array(li))
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt
+            cout_3opt = resu[0]
+            temps_3opt = resu[2]
+            temps_cumule = temps_3opt
+            param=','.join([str(elem) for elem in li])
 
-        elif methode=="plus proche voisin":
+
+        elif methode=="ppv":
             resu2 = ppv(1, distances, True)
             resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
             cout_methode = resu2[1]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[2]
+            cout_3opt = resu[0]
+            temps_3opt = resu[2]
+            temps_cumule = float(temps_3opt) + float(resu2[2])
+            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
 
-        elif methode == "plus proche voisin generalisé":
+
+        elif methode == "ppv generalisé":
             resu2 = ppv_gen(distances)
             resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
             cout_methode = resu2[1]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[2]
+            cout_3opt = resu[0]
+            temps_3opt = resu[2]
+            temps_cumule = float(temps_3opt) + float(resu2[2])
+            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
 
         else:
             resu2=moindre_cout(distances)
-            print(resu2[2])
-            resu=three_opt(resu2[2],distances)
             cout_methode = resu2[0]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[1]
+            resu = three_opt(resu2[2], distances)
+            cout_3opt = resu[0]
+            temps_3opt = resu[2]
+            temps_cumule = float(temps_3opt) + float(resu2[1])
+            param = ','.join([str(elem) for elem in resu2[2]])
+
         frame =self.graph_frame.frame
-        frame_ppv = Frame(frame)
-        frame_ppv.grid(columnspan=2,row=1, sticky=N + S + E + W, padx=15, pady=5)
-        Grid.rowconfigure(frame_ppv, 0, weight=1)
-        Grid.columnconfigure(frame_ppv, 0, weight=1)
+        frame_opt = Frame(frame)
+        frame_opt.grid(columnspan=2,row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index=self.index+1
+        Grid.rowconfigure(frame_opt, 0, weight=1)
+        Grid.columnconfigure(frame_opt, 0, weight=1)
 
-        Label(frame_ppv, text="Cout de l'heuristique 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
-        Label(frame_ppv, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text="Cout de l'heuristique 3-OPT avec : "+methode,font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_3opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
 
-        Label(frame_ppv, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
-        Label(frame_ppv, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
-        Label(frame_ppv, text="Temps d'execution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
-        Label(frame_ppv, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text="Temps d'execution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_3opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
 
-        Label(frame_ppv, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
-        Label(frame_ppv, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
+        Label(frame_opt, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
 
-        Label(frame_ppv,text="Gain en cout de la solution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
-        Label(frame_ppv, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
+        Label(frame_opt,text="Gain en cout de la solution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
+        Label(frame_opt, text=str(100*(cout_3opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
 
-
+        fichier_save("opt_ppv_gene.csv","3-OPT",self.file.file_path,param,cout_3opt,temps_3opt,temps_cumule)
 
     def show_programmation_dynamique(self):
 

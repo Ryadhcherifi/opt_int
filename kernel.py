@@ -6,6 +6,7 @@ import time
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import random
+import pandas as pd
 
 
 class File:
