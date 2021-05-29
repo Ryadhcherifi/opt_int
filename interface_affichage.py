@@ -167,16 +167,22 @@ class Work_area_Window(Frame):
     def choix_box_2opt(self,event):
         methode=event.widget.get()
         distances = self.file.distances
+        instance = self.file.file_path.split('/')[-1]
 
         print(methode)
         if methode=="Random":
             resu2=Rand(0,np.size(distances,0)-1,distances)
-            resu = two_opt2(resu2[2], distances)
             cout_methode=resu2[0]
-            cout_2opt=resu[0]
-            temps_2opt=resu[2]
-            temps_cumule=float(resu[2])+resu2[1]
-            param=','.join([str(elem) for elem in resu2[2]])
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance, resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(resu[2]) + float(resu2[1])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
 
 
         elif methode=="sequetielle":
@@ -184,48 +190,78 @@ class Work_area_Window(Frame):
             for i in range (np.size(distances,0) ) :
                 li.append(i)
             li.append(0)
-            resu=two_opt2(li,distances)
             cout_methode = cost(distances,np.array(li))
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt
-            param=','.join([str(elem) for elem in li])
-
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,li)
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(li, distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt)
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(li), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
         elif methode == "ppv generalisé":
-            resu2 = ppv_gen(distances)
-            resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
-            cout_methode = resu2[1]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = float(temps_2opt) + float(resu2[2])
-            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv_gen", instance, "/")
+            if cout_methode == None:
+                resu2 = ppv_gen(distances)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv_gen", instance, "/", resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                resu2 = [tour_optimal, cout_methode, temps]
 
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),temps_2opt, temps_cumule)
 
         elif methode=="ppv":
-            resu2=ppv(1,distances,True)
-            resu=two_opt2(list(np.array(resu2[0])-1),distances)
-            cout_methode = resu2[1]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = float(temps_2opt) + float(resu2[2])
-            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
-
-
-        else:
-            cout_methode,temps_methode,temps_cumule,param=get_results("opt_ppv_gene.csv","moindre cout",self.file.file_path,"")
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv", instance,1)
             if cout_methode==None:
-                resu2=moindre_cout(distances)
+                resu2=ppv(1,distances,True)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv", instance, str(1), resu2[1], str(resu2[0]), resu2[2],resu2[2])
+                print("hhh")
             else:
-                resu2=[cout_methode,temps_methode,param]
-            cout_methode,temps_2opt,temps_cumule,param=get_results("opt_ppv_gene.csv","moindre cout",self.file.file_path,"")
-            if cout_methode==None:
-                resu=two_opt2(resu2[2],distances)
+                print("fff")
+                resu2=[tour_optimal,cout_methode,temps]
+
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[0])
+            if cout_2opt==None:
+                print("hhh")
+                resu=two_opt2(list(np.array(resu2[0])-1),distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv","2-OPT",instance,str(resu2[0]),str(cout_2opt),str(resu[1]),temps_2opt,temps_cumule)
+        else:
+
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "mc", instance, "/")
+            if cout_methode == None:
+                resu2=moindre_cout(distances)
                 cout_methode = resu2[0]
+                fichier_save("./stats_file.csv", "mc", instance, "/", resu2[0], str(resu2[2]), resu2[1], resu2[1])
+                print("hhh")
+            else:
+                print("fff")
+                resu2=[cout_methode,temps,tour_optimal]
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(temps_2opt) + float(resu2[1])
-            param=str(resu2[2])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
         frame =self.graph_frame.frame
         frame_opt = Frame(frame)
@@ -248,7 +284,6 @@ class Work_area_Window(Frame):
 
         Label(frame_opt,text="Gain en cout de la solution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
         Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
-        fichier_save("opt_ppv_gene.csv","2-OPT",self.file.file_path,param,cout_2opt,temps_2opt,temps_cumule)
 
     def show_3opt(self):
         frame = self.graph_frame.frame
@@ -267,59 +302,107 @@ class Work_area_Window(Frame):
         self.graph_frame.update()
 
     def choix_box_3opt(self,event):
-        methode=event.widget.get()
+        methode = event.widget.get()
         distances = self.file.distances
+        instance = self.file.file_path.split('/')[-1]
+
         print(methode)
-        if methode=="Random":
-            resu2=Rand(0,np.size(distances,0)-1,distances)
+        if methode == "Random":
+            resu2 = Rand(0, np.size(distances, 0) - 1, distances)
             cout_methode = resu2[0]
-            resu = three_opt(resu2[2], distances)
-            cout_3opt = resu[0]
-            temps_3opt = resu[2]
-            temps_cumule = float(temps_3opt) + resu2[1]
-            param = ','.join([str(elem) for elem in resu2[2]])
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(resu[2]) + float(resu2[1])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
-
-        elif methode=="sequetielle":
-            li=[]
-            for i in range (np.size(distances,0) ) :
+        elif methode == "sequetielle":
+            li = []
+            for i in range(np.size(distances, 0)):
                 li.append(i)
             li.append(0)
-            resu=three_opt(li,distances)
-            cout_methode = cost(distances,np.array(li))
-            cout_3opt = resu[0]
-            temps_3opt = resu[2]
-            temps_cumule = temps_3opt
-            param=','.join([str(elem) for elem in li])
-
-
-        elif methode=="ppv":
-            resu2 = ppv(1, distances, True)
-            resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
-            cout_methode = resu2[1]
-            cout_3opt = resu[0]
-            temps_3opt = resu[2]
-            temps_cumule = float(temps_3opt) + float(resu2[2])
-            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
-
+            cout_methode = cost(distances, np.array(li))
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance, li)
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(li, distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt)
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(li), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
         elif methode == "ppv generalisé":
-            resu2 = ppv_gen(distances)
-            resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
-            cout_methode = resu2[1]
-            cout_3opt = resu[0]
-            temps_3opt = resu[2]
-            temps_cumule = float(temps_3opt) + float(resu2[2])
-            param=','.join([str(elem) for elem in list(np.array(resu2[0]) - 1)])
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv_gen", instance, "/")
+            if cout_methode == None:
+                resu2 = ppv_gen(distances)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv_gen", instance, "/", resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                resu2 = [tour_optimal, cout_methode, temps]
 
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        elif methode == "ppv":
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv", instance, 1)
+            if cout_methode == None:
+                resu2 = ppv(1, distances, True)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv", instance, str(1), resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                print("fff")
+                resu2 = [tour_optimal, cout_methode, temps]
+
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
         else:
-            resu2=moindre_cout(distances)
-            cout_methode = resu2[0]
-            resu = three_opt(resu2[2], distances)
-            cout_3opt = resu[0]
-            temps_3opt = resu[2]
-            temps_cumule = float(temps_3opt) + float(resu2[1])
-            param = ','.join([str(elem) for elem in resu2[2]])
+
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "mc", instance, "/")
+            if cout_methode == None:
+                resu2 = moindre_cout(distances)
+                cout_methode = resu2[0]
+                fichier_save("./stats_file.csv", "mc", instance, "/", resu2[0], str(resu2[2]), resu2[1], resu2[1])
+                print("hhh")
+            else:
+                print("fff")
+                resu2 = [cout_methode, temps, tour_optimal]
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[1])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
         frame =self.graph_frame.frame
         frame_opt = Frame(frame)
@@ -329,20 +412,18 @@ class Work_area_Window(Frame):
         Grid.columnconfigure(frame_opt, 0, weight=1)
 
         Label(frame_opt, text="Cout de l'heuristique 3-OPT avec : "+methode,font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
-        Label(frame_opt, text=str(cout_3opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
 
         Label(frame_opt, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
         Label(frame_opt, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
         Label(frame_opt, text="Temps d'execution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
-        Label(frame_opt, text=str(temps_3opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
 
         Label(frame_opt, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
         Label(frame_opt, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
 
         Label(frame_opt,text="Gain en cout de la solution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
-        Label(frame_opt, text=str(100*(cout_3opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
-
-        fichier_save("opt_ppv_gene.csv","3-OPT",self.file.file_path,param,cout_3opt,temps_3opt,temps_cumule)
+        Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
 
     def show_programmation_dynamique(self):
 
