@@ -1,8 +1,8 @@
-import time as time
 from tkinter import *
 from tkinter import ttk
 from functools import partial
 from kernel import *
+from tabou import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
@@ -53,6 +53,13 @@ class Work_area_Window(Frame):
         affichage_menu_heur_spec.add_command(label="2-OPT",command=self.show_2opt)
         affichage_menu_heur_spec.add_command(label="Ant Colony Optimizaion",command=self.show_aco)
 
+        # Debut recherche tabou
+
+        tabou = Menu(menu.menu, tearoff="false", )
+        menu.menu.add_cascade(label="Recherche tabou", menu=tabou)
+        # tabou.add_command(label="Tabou simple", command=self.show_tabou_simple_parametrer)
+        tabou.add_command(label="Tabou hybride", command=self.show_tabou_simple_parametrer)
+        tabou.add_command(label="ITS", command=self.show_ITS_parametrer)
 
         plot.add_command(label="Programmation dynamique", command=self.show_programmation_dynamique)
         plot.add_command(label="Bunch and bound", command=self.show_bunch_and_bound)
@@ -73,6 +80,269 @@ class Work_area_Window(Frame):
         menu2.grid(row=0, column=3, padx=15, pady=5)
         frame.grid(row=0, column=0, sticky=N + S + E + W)
 
+    #fonctions RT
+
+    def show_ITS_parametrer(self):
+        frame = self.graph_frame.frame
+        frame_tabou_simple = Frame(frame)
+        frame_tabou_simple.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index += 1
+        Grid.rowconfigure(frame_tabou_simple, 0, weight=1)
+        Grid.columnconfigure(frame_tabou_simple, 0, weight=1)
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+
+        frame1 = Frame(frame_tabou_simple)
+        frame1.pack(anchor="w")
+
+
+        Label(frame1, text="Le nombre d'iterations ITS :").grid(column=0, columnspan=1, row=0, padx=10)
+        nb_iteration_ITS = IntVar()
+        nb_iteration_ITS.set(10)
+        Entry(frame1, textvariable=nb_iteration_ITS).grid(column=1, columnspan=1, row=0, padx=10)
+
+
+        Label(frame1, text="Le nombre d'iterations de la RT :").grid(column=0, columnspan=1, row=7, padx=10)
+        nb_iteration = IntVar()
+        nb_iteration.set(800)
+        Entry(frame1, textvariable=nb_iteration).grid(column=1, columnspan=1, row=7, padx=10)
+
+
+        Label(frame1, text="Pas d'augmentation :").grid(column=0, columnspan=1, row=2, padx=10)
+        pas_aug = StringVar()
+        pas_aug.set("0.75")
+        Entry(frame1, textvariable=pas_aug).grid(column=1, columnspan=1, row=2, padx=10)
+
+        Label(frame1, text="Pas de diminution :").grid(column=2, columnspan=1, row=2, padx=10)
+        pas_dim = StringVar()
+        pas_dim.set("1.0")
+        Entry(frame1, textvariable=pas_dim).grid(column=3, columnspan=1, row=2, padx=10)
+
+        Label(frame1, text="Taille de la liste tabou :").grid(column=0, columnspan=1, row=4, padx=10)
+        taille_liste_tabou = IntVar()
+        taille_liste_tabou.set(80)
+        Entry(frame1, textvariable=taille_liste_tabou).grid(column=1, columnspan=1, row=4, padx=10)
+
+        Label(frame1, text="Taille min voisinage :").grid(column=0, columnspan=1, row=3, padx=10)
+        taille_v_min = IntVar()
+        taille_v_min.set(15)
+        Entry(frame1, textvariable=taille_v_min).grid(column=1, columnspan=1, row=3, padx=10)
+
+        Label(frame1, text="Taille max voisinage :").grid(column=2, columnspan=1, row=3, padx=10)
+        taille_v_max = IntVar()
+        taille_v_max.set(25)
+        Entry(frame1, textvariable=taille_v_max).grid(column=3, columnspan=1, row=3, padx=10)
+
+        Label(frame1, text="Taille initiale voisinage :").grid(column=4, columnspan=1, row=3, padx=10)
+        taille_v_i = IntVar()
+        taille_v_i.set(20)
+        Entry(frame1, textvariable=taille_v_i).grid(column=5, columnspan=1, row=3, padx=10)
+
+
+        Label(frame1, text="Mu :").grid(column=0, columnspan=1, row=5, padx=10)
+        mu = IntVar()
+        mu.set(150)
+        Entry(frame1, textvariable=mu).grid(column=1, columnspan=1, row=5, padx=10)
+
+        print("row7")
+        Button(frame1, text="ok default ", command=partial(self.show_ITS_default, frame1)).grid(column=0, columnspan=1, row=8, padx=10)
+        Button(frame1, text="calculer", command=partial(self.show_ITS_param, nb_iteration, frame1,nb_iteration_ITS,pas_dim,pas_aug,taille_liste_tabou,taille_v_min,taille_v_max,taille_v_i,mu)).grid(column=1, columnspan=1, row=8, padx=10)
+
+
+
+        self.graph_frame.update()
+
+
+        return None
+
+    def show_ITS_default(self, frame1):
+
+
+        points, N = load_points(self.file_path)
+
+        distances = load_distances(points, N)
+        np.savetxt("distances.txt", distances)
+
+        tour, cout, time = ITS(distances, 0)
+        print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
+
+        Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
+        cout_string = StringVar()
+        cout_string.set(str(cout))
+        Label(frame1, textvariable=cout_string).grid(column=1, columnspan=1, row=10, padx=10)
+        Label(frame1, text="Temps d\'éxecution :").grid(column=2, columnspan=1, row=10, padx=10)
+        temps_string = StringVar()
+        temps_string.set(str(time))
+        Label(frame1, textvariable=temps_string).grid(column=3, columnspan=1, row=10, padx=10)
+
+
+
+        #label.pack()
+
+        return None
+
+    def show_ITS_param(self, nb_iteration, frame1, nb_iteration_ITS,pas_dim,pas_aug,taille_liste_tabou,taille_v_min,taille_v_max,taille_v_i,mu):
+        """print("nb _it wesh", nb_iteration.get())
+        print("la solution de depart ", sol_depart.get())
+        print("le reste ",float(pas_dim.get()),float(pas_aug.get()),taille_liste_tabou.get(),taille_v_min.get(),taille_v_max.get(),taille_v_i.get(),mu.get(),"\nok")
+        print("HELOOO maj",self.file_path)"""
+
+
+        points, N = load_points(self.file_path)
+
+        distances = load_distances(points, N)
+        np.savetxt("distances.txt", distances)
+        tour, cout, time = ITS(distances, 0 ,NB_IT_ITS=nb_iteration_ITS.get(),TAILLE_LISTE_TABOU_MAX=taille_liste_tabou.get(),mu=mu.get(),PAS_AUGMENTATION=float(pas_aug.get()),PAS_DIMINUTION=float(pas_dim.get()),MAX_ITERATION=nb_iteration.get(),taille_voisinage=taille_v_i.get(), TAILLE_VOISINAGE_MIN=taille_v_min.get(), TAILLE_VOISINAGE_MAX=taille_v_max.get(),)
+
+        print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
+
+        Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
+        cout_string = StringVar()
+        cout_string.set(str(cout))
+        Label(frame1, textvariable=cout_string).grid(column=1, columnspan=1, row=10, padx=10)
+        Label(frame1, text="Temps d\'éxecution :").grid(column=2, columnspan=1, row=10, padx=10)
+        temps_string = StringVar()
+        temps_string.set(str(time))
+        Label(frame1, textvariable=temps_string).grid(column=3, columnspan=1, row=10, padx=10)
+
+
+
+        #label.pack()
+
+        return None
+
+
+
+    def show_tabou_simple_parametrer(self ):
+        frame = self.graph_frame.frame
+        frame_tabou_simple = Frame(frame)
+        frame_tabou_simple.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index += 1
+        Grid.rowconfigure(frame_tabou_simple, 0, weight=1)
+        Grid.columnconfigure(frame_tabou_simple, 0, weight=1)
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+
+        frame1 = Frame(frame_tabou_simple)
+        frame1.pack(anchor="w")
+
+
+        Label(frame1, text="Le nombre d'iteration :").grid(column=0, columnspan=1, row=0, padx=10)
+        nb_iteration = IntVar()
+        nb_iteration.set(18000)
+        Entry(frame1, textvariable=nb_iteration).grid(column=1, columnspan=1, row=0, padx=10)
+
+        Label(frame1, text="La solution de depart :").grid(column=0, columnspan=1, row=1, padx=10)
+        sol_depart = ["opt", "ppv", "mc", "ppv1"]
+        liste_soldepart = ttk.Combobox(frame1, values=sol_depart)
+        liste_soldepart.current(0)
+        liste_soldepart.grid(column=1, columnspan=1, row=1, padx=10)
+
+        Label(frame1, text="Pas d'augmentation :").grid(column=0, columnspan=1, row=2, padx=10)
+        pas_aug = StringVar()
+        pas_aug.set("0.75")
+        Entry(frame1, textvariable=pas_aug).grid(column=1, columnspan=1, row=2, padx=10)
+
+        Label(frame1, text="Pas de diminution :").grid(column=2, columnspan=1, row=2, padx=10)
+        pas_dim = StringVar()
+        pas_dim.set("1.0")
+        Entry(frame1, textvariable=pas_dim).grid(column=3, columnspan=1, row=2, padx=10)
+
+        Label(frame1, text="Taille de la liste tabou :").grid(column=0, columnspan=1, row=4, padx=10)
+        taille_liste_tabou = IntVar()
+        taille_liste_tabou.set(80)
+        Entry(frame1, textvariable=taille_liste_tabou).grid(column=1, columnspan=1, row=4, padx=10)
+
+        Label(frame1, text="Taille min voisinage :").grid(column=0, columnspan=1, row=3, padx=10)
+        taille_v_min = IntVar()
+        taille_v_min.set(15)
+        Entry(frame1, textvariable=taille_v_min).grid(column=1, columnspan=1, row=3, padx=10)
+
+        Label(frame1, text="Taille max voisinage :").grid(column=2, columnspan=1, row=3, padx=10)
+        taille_v_max = IntVar()
+        taille_v_max.set(25)
+        Entry(frame1, textvariable=taille_v_max).grid(column=3, columnspan=1, row=3, padx=10)
+
+        Label(frame1, text="Taille initiale voisinage :").grid(column=4, columnspan=1, row=3, padx=10)
+        taille_v_i = IntVar()
+        taille_v_i.set(20)
+        Entry(frame1, textvariable=taille_v_i).grid(column=5, columnspan=1, row=3, padx=10)
+
+
+        Label(frame1, text="Mu :").grid(column=0, columnspan=1, row=5, padx=10)
+        mu = IntVar()
+        mu.set(100)
+        Entry(frame1, textvariable=mu).grid(column=1, columnspan=1, row=5, padx=10)
+
+        print("row7")
+        Button(frame1, text="ok default ", command=partial(self.show_tabou_simple, nb_iteration.get(), frame1)).grid(column=0, columnspan=1, row=8, padx=10)
+        Button(frame1, text="calculer", command=partial(self.show_tabou_simple_param, nb_iteration, frame1,liste_soldepart,pas_dim,pas_aug,taille_liste_tabou,taille_v_min,taille_v_max,taille_v_i,mu)).grid(column=1, columnspan=1, row=8, padx=10)
+
+
+
+        self.graph_frame.update()
+
+
+        return None
+
+    def show_tabou_simple(self, nb_iteration, frame1):
+        """print("nb _it", nb_iteration.get())
+        print("HELOOO maj",self.file_path)"""
+        points, N = load_points(self.file_path)
+
+        distances = load_distances(points, N)
+        np.savetxt("distances.txt", distances)
+
+        tour, cout, amelioration, time = recherche_tabou_2opt(distances, 0)
+
+        print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
+
+        Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
+        cout_string = StringVar()
+        cout_string.set(str(cout))
+        Label(frame1, textvariable=cout_string).grid(column=1, columnspan=1, row=10, padx=10)
+        Label(frame1, text="Temps d\'éxecution :").grid(column=2, columnspan=1, row=10, padx=10)
+        temps_string = StringVar()
+        temps_string.set(str(time))
+        Label(frame1, textvariable=temps_string).grid(column=3, columnspan=1, row=10, padx=10)
+
+        #label.pack()
+
+        return None
+
+    def show_tabou_simple_param(self, nb_iteration, frame1, sol_depart,pas_dim,pas_aug,taille_liste_tabou,taille_v_min,taille_v_max,taille_v_i,mu):
+        """print("nb _it wesh", nb_iteration.get())
+        print("la solution de depart ", sol_depart.get())
+        print("le reste ",float(pas_dim.get()),float(pas_aug.get()),taille_liste_tabou.get(),taille_v_min.get(),taille_v_max.get(),taille_v_i.get(),mu.get(),"\nok")
+        print("HELOOO maj",self.file_path)"""
+
+        print("sol depart interface ", sol_depart.get())
+
+        points, N = load_points(self.file_path)
+
+        distances = load_distances(points, N)
+        np.savetxt("distances.txt", distances)
+
+        tour, cout, amelioration, time = recherche_tabou_2opt(distances, 0,depart=sol_depart.get(),TAILLE_LISTE_TABOU_MAX=taille_liste_tabou.get(),mu=mu.get(),PAS_AUGMENTATION=float(pas_aug.get()),PAS_DIMINUTION=float(pas_dim.get()),MAX_ITERATION=nb_iteration.get(),taille_voisinage=taille_v_i.get(), TAILLE_VOISINAGE_MIN=taille_v_min.get(), TAILLE_VOISINAGE_MAX=taille_v_max.get(),)
+
+        print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
+
+        Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
+        cout_string = StringVar()
+        cout_string.set(str(cout))
+        Label(frame1, textvariable=cout_string).grid(column=1, columnspan=1, row=10, padx=10)
+        Label(frame1, text="Temps d\'éxecution :").grid(column=2, columnspan=1, row=10, padx=10)
+        temps_string = StringVar()
+        temps_string.set(str(time))
+        Label(frame1, textvariable=temps_string).grid(column=3, columnspan=1, row=10, padx=10)
+
+
+
+        #label.pack()
+
+        return None
+
+
 
     def default_params_init(self):
 
@@ -91,6 +361,12 @@ class Work_area_Window(Frame):
         }
         self.paramaters["aco"]=aco
         #print(self.paramaters)
+
+
+
+
+
+
 
     def get_params(self,methode):
         if (methode == "ppv"):
@@ -121,17 +397,15 @@ class Work_area_Window(Frame):
                  print("Depart="+str(depart_tk.get()))
     def show_2opt(self):
         frame = self.graph_frame.frame
-        labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+        Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !").grid(column=0, columnspan=1, row=0,padx=10)
 
-        labelChoix.pack()
-        listemethodes = ["sequetielle","Random", "plus proche voisin", "moindre cout"]
-        listeCombo = ttk.Combobox(frame, values=listemethodes)
+        listemethodes = ["sequetielle","Random", "ppv","ppv generalisé" ,"moindre cout"]
+        listeCombo = ttk.Combobox(frame,state="readonly", values=listemethodes)
+        listeCombo.grid(column=1, columnspan=1, row=0,padx=10)
         listeCombo.bind('<<ComboboxSelected>>', self.choix_box_2opt)
         listeCombo.current(0)
-
-        listeCombo.pack()
-
-
         # frame.pack()
         self.index = self.index + 1
         self.graph_frame.update()
@@ -139,47 +413,264 @@ class Work_area_Window(Frame):
     def choix_box_2opt(self,event):
         methode=event.widget.get()
         distances = self.file.distances
-        cout_methode=0
-        cout_2opt=0
-        temps_2opt=0
-        temps_cumule=0
+        instance = self.file.file_path.split('/')[-1]
 
+        print(methode)
         if methode=="Random":
             resu2=Rand(0,np.size(distances,0)-1,distances)
-            resu = two_opt2(resu2[2], distances)
             cout_methode=resu2[0]
-            cout_2opt=resu[0]
-            temps_2opt=resu[2]
-            temps_cumule=temps_2opt+resu2[1]
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance, resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(resu[2]) + float(resu2[1])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+
 
         elif methode=="sequetielle":
             li=[]
             for i in range (np.size(distances,0) ) :
                 li.append(i)
             li.append(0)
-            resu=two_opt2(li,distances)
             cout_methode = cost(distances,np.array(li))
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,li)
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(li, distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt)
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(li), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
 
-        elif methode=="plus proche voisin":
-            resu2=ppv(1,distances)
-            resu=two_opt2(list(np.array(resu2[0])-1),distances)
+        elif methode == "ppv generalisé":
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv_gen", instance, "/")
+            if cout_methode == None:
+                resu2 = ppv_gen(distances)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv_gen", instance, "/", resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                resu2 = [tour_optimal, cout_methode, temps]
 
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),temps_2opt, temps_cumule)
+
+        elif methode=="ppv":
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv", instance,1)
+            if cout_methode==None:
+                resu2=ppv(1,distances,True)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv", instance, str(1), resu2[1], str(resu2[0]), resu2[2],resu2[2])
+                print("hhh")
+            else:
+                print("fff")
+                resu2=[tour_optimal,cout_methode,temps]
+
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[0])
+            if cout_2opt==None:
+                print("hhh")
+                resu=two_opt2(list(np.array(resu2[0])-1),distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv","2-OPT",instance,str(resu2[0]),str(cout_2opt),str(resu[1]),temps_2opt,temps_cumule)
         else:
-            resu2=moindre_cout(distances)
-            print(resu2[2])
-            resu=two_opt2(resu2[2],distances)
-            cout_methode = resu2[0]
-            cout_2opt = resu[0]
-            temps_2opt = resu[2]
-            temps_cumule = temps_2opt + resu2[1]
-        lst=[("Cout 2-opt",cout_2opt),("Cout methode generatrice",cout_methode)]
-        #Table(self.graph_frame.frame,2,2)
+
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "mc", instance, "/")
+            if cout_methode == None:
+                resu2=moindre_cout(distances)
+                cout_methode = resu2[0]
+                fichier_save("./stats_file.csv", "mc", instance, "/", resu2[0], str(resu2[2]), resu2[1], resu2[1])
+                print("hhh")
+            else:
+                print("fff")
+                resu2=[cout_methode,temps,tour_optimal]
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "2-OPT", instance,resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = two_opt2(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[1])
+                fichier_save("./stats_file.csv", "2-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        frame =self.graph_frame.frame
+        frame_opt = Frame(frame)
+        frame_opt.grid(columnspan=2,row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index=self.index+1
+        Grid.rowconfigure(frame_opt, 0, weight=1)
+        Grid.columnconfigure(frame_opt, 0, weight=1)
+        #frame_ppv=Frame(frame2)
+        #frame_ppv.pack()
+        Label(frame_opt, text="Cout de l'heuristique 2-OPT avec : "+ methode,font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
+
+        Label(frame_opt, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text="Temps d'execution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
+
+        Label(frame_opt, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
+
+        Label(frame_opt,text="Gain en cout de la solution 2-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
+        Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
 
     def show_3opt(self):
-             None
+        frame = self.graph_frame.frame
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+        Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !").grid(column=0, columnspan=1, row=0,padx=10)
+
+        listemethodes = ["sequetielle","Random", "ppv","ppv generalisé", "moindre cout"]
+        listeCombo = ttk.Combobox(frame, values=listemethodes)
+        listeCombo.grid(column=1, columnspan=1, row=0,padx=10)
+
+        listeCombo.bind('<<ComboboxSelected>>', self.choix_box_3opt)
+        listeCombo.current(0)
+        # frame.pack()
+        self.index = self.index + 1
+        self.graph_frame.update()
+
+    def choix_box_3opt(self,event):
+        methode = event.widget.get()
+        distances = self.file.distances
+        instance = self.file.file_path.split('/')[-1]
+
+        print(methode)
+        if methode == "Random":
+            resu2 = Rand(0, np.size(distances, 0) - 1, distances)
+            cout_methode = resu2[0]
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = three_opt(resu2[2],distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(resu[2]) + float(resu2[1])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        elif methode == "sequetielle":
+            li = []
+            for i in range(np.size(distances, 0)):
+                li.append(i)
+            li.append(0)
+            cout_methode = cost(distances, np.array(li))
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance, li)
+            if cout_2opt == None:
+                print("hhh")
+                resu = three_opt(li, distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt)
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(li), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        elif methode == "ppv generalisé":
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv_gen", instance, "/")
+            if cout_methode == None:
+                resu2 = ppv_gen(distances)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv_gen", instance, "/", resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                resu2 = [tour_optimal, cout_methode, temps]
+
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = three_opt(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        elif methode == "ppv":
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "ppv", instance, 1)
+            if cout_methode == None:
+                resu2 = ppv(1, distances, True)
+                cout_methode = resu2[1]
+                fichier_save("./stats_file.csv", "ppv", instance, str(1), resu2[1], str(resu2[0]), resu2[2], resu2[2])
+                print("hhh")
+            else:
+                print("fff")
+                resu2 = [tour_optimal, cout_methode, temps]
+
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[0])
+            if cout_2opt == None:
+                print("hhh")
+                resu = three_opt(list(np.array(resu2[0]) - 1), distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[2])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[0]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+        else:
+
+            cout_methode, tour_optimal, temps, temps_cum = get_results("./stats_file.csv", "mc", instance, "/")
+            if cout_methode == None:
+                resu2 = moindre_cout(distances)
+                cout_methode = resu2[0]
+                fichier_save("./stats_file.csv", "mc", instance, "/", resu2[0], str(resu2[2]), resu2[1], resu2[1])
+                print("hhh")
+            else:
+                print("fff")
+                resu2 = [cout_methode, temps, tour_optimal]
+            print(resu2)
+            cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance,
+                                                                            resu2[2])
+            if cout_2opt == None:
+                print("hhh")
+                resu = three_opt(resu2[2], distances)
+                cout_2opt = resu[0]
+                temps_2opt = resu[2]
+                temps_cumule = float(temps_2opt) + float(resu2[1])
+                fichier_save("./stats_file.csv", "3-OPT", instance, str(resu2[2]), str(cout_2opt), str(resu[1]),
+                             temps_2opt, temps_cumule)
+
+        frame =self.graph_frame.frame
+        frame_opt = Frame(frame)
+        frame_opt.grid(columnspan=2,row=self.index, sticky=N + S + E + W, padx=15, pady=5)
+        self.index=self.index+1
+        Grid.rowconfigure(frame_opt, 0, weight=1)
+        Grid.columnconfigure(frame_opt, 0, weight=1)
+
+        Label(frame_opt, text="Cout de l'heuristique 3-OPT avec : "+methode,font=("Courier", 18)).grid(column=0, columnspan=1, row=1,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=1,padx=10,pady=10)
+
+        Label(frame_opt, text="Cout de la methode " + methode + ": ",font=("Courier", 18)).grid(column=0, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text=str(cout_methode),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=2,padx=10,pady=10)
+        Label(frame_opt, text="Temps d'execution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=3,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_2opt),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=3,padx=10,pady=10)
+
+        Label(frame_opt, text="Temps cumulé des deux methodes: " ,font=("Courier", 18)).grid(column=0, columnspan=1, row=4,padx=10,pady=10)
+        Label(frame_opt, text=str(temps_cumule),font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=4,padx=10,pady=10)
+
+        Label(frame_opt,text="Gain en cout de la solution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
+        Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
+
     def show_programmation_dynamique(self):
 
         tour,cout,time=Programation_dynamique(self.file.distances,self.file.nb_villes)
@@ -313,8 +804,6 @@ class Work_area_Window(Frame):
         for a in range(N):
             pheromone[a][a]=0
             pheromone2[a][a]=0
-        t1=time.time()
-
         for t in range(it) :    
             for k in range(l) :
                 allowed=[i for i in range(N)]
@@ -346,9 +835,8 @@ class Work_area_Window(Frame):
             i=j
         chemin[N-1]=0
         cout=cout+distances[i][0]
-        t2=time.time()
-        Label(frame_aco_params,text="Cout : "+str(cout)).grid(column=0, columnspan=1, row=8,padx=10)
-        Label(frame_aco_params,text="Temps : "+str(t2-t1)).grid(column=0, columnspan=1, row=9,padx=10)
+        Label(frame_aco_params,text="Chemin : "+str(chemin)).grid(column=0, columnspan=10, row=8,padx=10)
+        Label(frame_aco_params,text="Cout : "+str(cout)).grid(column=0, columnspan=1, row=9,padx=10)
 
         print(chemin)
         print(cout)
