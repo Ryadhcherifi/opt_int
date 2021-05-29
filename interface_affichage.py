@@ -11,7 +11,7 @@ class Work_area_Window(Frame):
         Frame.__init__(self, parent)
         self.paramaters={}
         self.default_params_init()
-        self.index=0
+        self.index=1
         self.project_label=StringVar()
         self.project_label.set("")
         self.file_path = file.file_path
@@ -28,7 +28,6 @@ class Work_area_Window(Frame):
         self.affichage = Frame(self)
         self.affichage.grid(row=1, column=0, sticky=N + S + E + W)
         self.graph_frame = ScrollFrame(self.affichage)
-
         #Grid.rowconfigure(self.graph_frame.frame, 0, weight=1)
         #Grid.columnconfigure(self.graph_frame.frame, 0, weight=1)
         #self.graph_frame.grid(row=1, column=0, sticky=N + S + E + W)
@@ -50,9 +49,8 @@ class Work_area_Window(Frame):
         plot = Menu(affichage_menu, tearoff="false", )
         affichage_menu.add_cascade(label="Plot", menu=plot)
         affichage_menu_heur_spec.add_command(label="Plus proche voisin (PPV)",command=self.show_ppv)
-        affichage_menu_heur_spec.add_command(label="Moindre cout",command=self.show_moindre_cout)
         affichage_menu_heur_spec.add_command(label="2-OPT",command=self.show_2opt)
-        affichage_menu_heur_spec.add_command(label="3-OPT",command=self.show_3opt)
+        affichage_menu_heur_spec.add_command(label="Ant Colony Optimizaion",command=self.show_aco)
 
 
         plot.add_command(label="Programmation dynamique", command=self.show_programmation_dynamique)
@@ -78,9 +76,19 @@ class Work_area_Window(Frame):
     def default_params_init(self):
 
         ppv = {
-            "depart": 1
+            "depart": 0
         }
         self.paramaters["ppv"]=ppv
+        aco = {
+            "depart": 0,
+            "Q":50,
+            "alpha":1,
+            "beta":1,
+            "l":40,
+            "it":30,
+            "ro":0.5
+        }
+        self.paramaters["aco"]=aco
         #print(self.paramaters)
 
     def get_params(self,methode):
@@ -88,67 +96,28 @@ class Work_area_Window(Frame):
             params = self.paramaters.get("ppv")
             None
 
-    def show_moindre_cout(self):
-        frame = self.graph_frame.frame
-        frame_mc = Frame(frame)
-        frame_mc.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
-        self.index += 1
-        Grid.rowconfigure(frame_mc, 0, weight=1)
-        Grid.columnconfigure(frame_mc, 0, weight=1)
-        Grid.rowconfigure(frame_mc, 0, weight=1)
-        Grid.columnconfigure(frame_mc, 0, weight=1)
-        frame_mc_result = Frame(frame_mc)
-        frame_mc_result.pack(anchor="w")
-        cout, time, route = moindre_cout(self.file.distances)
-        Label(frame_mc_result,text="\n*** Avec la méthode moindre cout ***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
-        Label(frame_mc_result,text="    Cout de la solution généré:"+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
-        Label(frame_mc_result,text="    Temps d'éxecution:"+str(time)).grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
-        self.graph_frame.update()
-
     def show_ppv(self):
         frame = self.graph_frame.frame
         frame_ppv = Frame(frame)
-        frame_ppv.grid(column=0, columnspan=1, row=self.index, sticky=N + S + E + W, padx=15, pady=5)
-        self.index += 1
+        frame_ppv.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
         Grid.rowconfigure(frame_ppv, 0, weight=1)
         Grid.columnconfigure(frame_ppv, 0, weight=1)
         Grid.rowconfigure(frame, 0, weight=1)
         Grid.columnconfigure(frame, 0, weight=1)
-
+        print(self.paramaters)
         depart =  self.paramaters["ppv"]["depart"]
-        depart_tk=IntVar()
-        depart_tk.set(depart)
+        depart_tk=IntVar(depart)
         frame_ppv_params = Frame(frame_ppv)
-        frame_ppv_params.pack(anchor="w")
+        frame_ppv_params.pack()
         Label(frame_ppv_params,text="Ville de départ:").grid(column=0, columnspan=1, row=0,padx=10)
         Entry(frame_ppv_params,textvariable=depart_tk).grid(column=1, columnspan=1, row=0,padx=10)
-        Button(frame_ppv_params, text="Calculer", command=partial(self.show_ppv_result,depart_tk,frame_ppv)).grid(column=2, columnspan=1, row=0,padx=10)
-        Button(frame_ppv_params, text="PPV Généralisée", command=partial(self.show_ppv_gen_result,frame_ppv)).grid(column=3, columnspan=1, row=0,padx=10)
         self.graph_frame.update()
+        Button(frame_ppv_params, text="Calculer", command=partial(self.show_ppv_result,depart_tk)).grid(column=2, columnspan=1, row=0,padx=10)
+        Button(frame_ppv_params, text="PPV Généralisée", command=None).grid(column=3, columnspan=1, row=0,padx=10)
 
-    def show_ppv_gen_result(self,frame_ppv):
-        frame_ppv_result = Frame(frame_ppv)
-        frame_ppv_result.pack(anchor="w")
-        tour_optimal, cout, time, stats=ppv_gen(self.file.distances,stats = True)
-        Label(frame_ppv_result,text="\n***Le plus proche voisin avec toutes les villes comme ville de départ***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
-        Label(frame_ppv_result,text="       Cout de la solution: "+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
-        Label(frame_ppv_result,text="       Temps d'éxecution de l'algorithme': "+str(time)+" s").grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
-        frame_plot = Frame(frame_ppv)
-        fig = plot_ppv_gen(len(tour_optimal), stats)
-        fig_tk =FigureCanvasTkAgg(fig, frame_plot).get_tk_widget()
-        fig_tk.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W,padx=15, pady=5)
-        frame_plot.pack(anchor="w")
-    def show_ppv_result(self,depart_tk,frame_ppv):
-        print("Depart="+str(depart_tk.get()))
-        debut = depart_tk.get()
-        print(self.file.distances)
-        visite, cout, time =ppv(debut,self.file.distances,temps=True)
-        frame_ppv_result = Frame(frame_ppv)
-        frame_ppv_result.pack(anchor="w")
-        Label(frame_ppv_result,text="\n***Le plus proche voisin avec "+str(debut)+" comme ville de départ donne:***").grid(column=0, columnspan=1, row=0,padx=10,pady=10, sticky="nw")
-        Label(frame_ppv_result,text="       Cout de la solution: "+str(cout)).grid(column=0, columnspan=1, row=1,padx=10,pady=10, sticky="nw")
-        Label(frame_ppv_result,text="       Temps d'éxecution de l'algorithme: "+str(time)+" s").grid(column=0, columnspan=1, row=2,padx=10,pady=10, sticky="nw")
 
+    def show_ppv_result(self,depart_tk):
+                 print("Depart="+str(depart_tk.get()))
     def show_2opt(self):
         frame = self.graph_frame.frame
         labelChoix = Label(frame, text="Veuillez choisir l'algorithme pour l'instance de depart !")
@@ -264,6 +233,157 @@ class Work_area_Window(Frame):
         self.index = self.index + 1
         self.graph_frame.update()
 
+    def show_aco(self):
+        frame = self.graph_frame.frame
+        frame_aco = Frame(frame)
+        frame_aco.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
+        Grid.rowconfigure(frame_aco, 0, weight=1)
+        Grid.columnconfigure(frame_aco, 0, weight=1)
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+        depart =  self.paramaters["aco"]["depart"]
+        print(self.paramaters["aco"]["Q"])
+        Qu =  self.paramaters["aco"]["Q"]
+        alpha =  self.paramaters["aco"]["alpha"]
+        beta =  self.paramaters["aco"]["beta"]
+        l =  self.paramaters["aco"]["l"]
+        it =  self.paramaters["aco"]["it"]
+        ro =  self.paramaters["aco"]["ro"]
+
+        depart_tk=IntVar()
+        depart_tk.set(depart)
+        Q_tk=IntVar()
+        Q_tk.set(Qu)
+        alpha_tk=IntVar()
+        alpha_tk.set(alpha)
+        beta_tk=IntVar()
+        beta_tk.set(beta)
+        l_tk=IntVar()
+        l_tk.set(l)
+        it_tk=IntVar()
+        it_tk.set(it)
+        
+        ro_tk=StringVar()
+        ro_tk.set(ro)
+
+        frame_aco_params = Frame(frame_aco)
+        frame_aco_params.pack()
+        Label(frame_aco_params,text="Ville de départ:").grid(column=0, columnspan=1, row=0,padx=10)
+        Entry(frame_aco_params,textvariable=depart_tk).grid(column=1, columnspan=1, row=0,padx=10)
+        Label(frame_aco_params,text="Nombre de fourmis").grid(column=0, columnspan=1, row=1,padx=10)
+        Entry(frame_aco_params,textvariable=l_tk).grid(column=1, columnspan=1, row=1,padx=10)
+        Label(frame_aco_params,text="Nombre de tours").grid(column=0, columnspan=1, row=2,padx=10)
+        Entry(frame_aco_params,textvariable=it_tk).grid(column=1, columnspan=1, row=2,padx=10)
+        Label(frame_aco_params,text="Taux d'évaporation").grid(column=0, columnspan=1, row=3,padx=10)
+        Entry(frame_aco_params,textvariable=ro_tk).grid(column=1, columnspan=1, row=3,padx=10)
+        Label(frame_aco_params,text="Coefficient de maj des phéromones Q").grid(column=0, columnspan=1, row=4,padx=10)
+        Entry(frame_aco_params,textvariable=Q_tk).grid(column=1, columnspan=1, row=4,padx=10)
+        Label(frame_aco_params,text="Coefficient des phéromones").grid(column=0, columnspan=1, row=5,padx=10)
+        Entry(frame_aco_params,textvariable=alpha_tk).grid(column=1, columnspan=1, row=5,padx=10)
+        Label(frame_aco_params,text="Coefficient de la visibilité").grid(column=0, columnspan=1, row=6,padx=10)
+        Entry(frame_aco_params,textvariable=beta_tk).grid(column=1, columnspan=1, row=6,padx=10)
+        self.graph_frame.update()
+        Button(frame_aco_params, text="Calculer", command=partial(self.show_aco_result,depart_tk,l_tk,it_tk,ro_tk,Q_tk,alpha_tk,beta_tk,frame_aco_params)).grid(column=2, columnspan=1, row=0,padx=10)
+        
+
+
+    def show_aco_result(self,depart_tk,l_tk,it_tk,ro_tk,Q_tk,alpha_tk,beta_tk,frame_aco_params):
+        depart =  depart_tk.get()
+        Qu = Q_tk.get()
+        alpha =  alpha_tk.get()
+        beta = beta_tk.get()
+        l =  l_tk.get()
+        it = it_tk.get()
+        ro =  1-float(ro_tk.get())
+        
+        distances = self.file.distances
+        points,N=self.load_points(self.file_path)
+        distances=self.load_distances(points,N)
+        print(N)
+        visibility=np.zeros((N,N),"double")
+        P=np.zeros((N,N),"double")
+        for i in range(N) : 
+            for j in range(N) :
+                if(distances[i][j]!=0):
+                    visibility[i][j]=1/distances[i][j]
+
+        pheromone=[[1/100 for i in range(N)] for j in range(N)]
+        pheromone2=[[1/100 for i in range(N)] for j in range(N)]
+        for a in range(N):
+            pheromone[a][a]=0
+            pheromone2[a][a]=0
+        for t in range(it) :    
+            for k in range(l) :
+                allowed=[i for i in range(N)]
+                #i=np.random.randint(100)
+                i=0
+                allowed.pop(allowed.index(i))
+                for a in range(N-1) :
+                    c=int(self.pk(i,allowed,pheromone,alpha,beta,visibility))
+                    allowed.pop(allowed.index(c))
+                    pheromone2[i][c]= pheromone[i][c]*ro + Qu/distances[i][c]
+                    pheromone2[c][i]=pheromone2[i][c]
+                    
+                    i=c
+            for a in range(N):
+                for b in range(N):
+                    pheromone[a][b]=pheromone2[a][b]  
+
+        chemin=[0 for i in range(N)]
+        i=0
+        cout=0        
+            
+        for a in range(N):
+            ind=np.max(pheromone[i])
+            j=pheromone[i].index(ind)
+            for b in range(N):
+                pheromone[b][i]=0
+            chemin[a]=j
+            cout=cout+distances[i][j]
+            i=j
+        chemin[N-1]=0
+        cout=cout+distances[i][0]
+        Label(frame_aco_params,text="Chemin : "+str(chemin)).grid(column=0, columnspan=10, row=8,padx=10)
+        Label(frame_aco_params,text="Cout : "+str(cout)).grid(column=0, columnspan=1, row=9,padx=10)
+
+        print(chemin)
+        print(cout)
+
+    def pk(self,i,allowed,pheromone,alpha,beta,visibility):
+        somme=0
+        for j in range(len(allowed)):
+            somme = somme + (pheromone[i][allowed[j]]**alpha)*(visibility[i][allowed[j]]**beta)
+        prob=[0 for j in range(len(allowed))]
+        for j in range(len(allowed)):
+            prob[j]=((pheromone[i][allowed[j]]**alpha)*(visibility[i][allowed[j]]**beta))/somme
+        return np.random.choice(
+        allowed, 
+        1,
+        p=prob)
+
+    def load_points(self,file_name):
+        file = open(file_name, 'r')
+        Name = file.readline().strip().split()[1]
+        FileType = file.readline().strip().split()[1] 
+        Comment = file.readline().strip().split()[1] 
+        Dimension = file.readline().strip().split()[1]
+        EdgeWeightType = file.readline().strip().split()[1]  
+        file.readline()
+        points = []
+        N = int(Dimension)
+        for i in range(0, int(Dimension)):
+            x,y = file.readline().strip().split()[1:]
+            points.append([float(x), float(y)])
+        file.close()
+        return points,N
+    
+    def load_distances(self,points,N):
+        distances = np.zeros((N,N),"double")
+        for i in range(N) : 
+            for j in range(N) :
+                if (i != j):
+                    distances[i,j]=np.sqrt(np.square(points[i][0]-points[j][0])+np.square(points[i][1]-points[j][1]))
+        return distances
 
 class AutoScrollbar(Scrollbar):
     # A scrollbar that hides itself if it's not needed.
