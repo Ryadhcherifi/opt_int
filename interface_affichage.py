@@ -314,7 +314,7 @@ class Work_area_Window(Frame):
                                                                             resu2[2])
             if cout_2opt == None:
                 print("hhh")
-                resu = two_opt2(resu2[2], distances)
+                resu = three_opt(resu2[2],distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(resu[2]) + float(resu2[1])
@@ -330,7 +330,7 @@ class Work_area_Window(Frame):
             cout_2opt, tour_optimal, temps_2opt, temps_cumule = get_results("./stats_file.csv", "3-OPT", instance, li)
             if cout_2opt == None:
                 print("hhh")
-                resu = two_opt2(li, distances)
+                resu = three_opt(li, distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(temps_2opt)
@@ -352,7 +352,7 @@ class Work_area_Window(Frame):
                                                                             resu2[0])
             if cout_2opt == None:
                 print("hhh")
-                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                resu = three_opt(list(np.array(resu2[0]) - 1), distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(temps_2opt) + float(resu2[2])
@@ -375,7 +375,7 @@ class Work_area_Window(Frame):
                                                                             resu2[0])
             if cout_2opt == None:
                 print("hhh")
-                resu = two_opt2(list(np.array(resu2[0]) - 1), distances)
+                resu = three_opt(list(np.array(resu2[0]) - 1), distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(temps_2opt) + float(resu2[2])
@@ -397,7 +397,7 @@ class Work_area_Window(Frame):
                                                                             resu2[2])
             if cout_2opt == None:
                 print("hhh")
-                resu = two_opt2(resu2[2], distances)
+                resu = three_opt(resu2[2], distances)
                 cout_2opt = resu[0]
                 temps_2opt = resu[2]
                 temps_cumule = float(temps_2opt) + float(resu2[1])
