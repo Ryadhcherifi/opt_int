@@ -2,7 +2,8 @@ from tkinter import *
 from tkinter import ttk
 from functools import partial
 from kernel import *
-from tabou import *
+import time as time
+from tabou import ITS,recherche_tabou_2opt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
@@ -54,6 +55,7 @@ class Work_area_Window(Frame):
         affichage_menu_heur_spec.add_command(label="Moindre cout",command=self.show_moindre_cout)
         affichage_menu_heur_spec.add_command(label="2-OPT",command=self.show_2opt)
         affichage_menu_heur_spec.add_command(label="3-OPT",command=self.show_3opt)
+        affichage_menu_heur_spec.add_command(label="Ant Colony Optimizaion", command=self.show_aco)
 
         # Debut recherche tabou
 
@@ -160,14 +162,15 @@ class Work_area_Window(Frame):
     def show_ITS_default(self, frame1):
 
 
-        points, N = load_points(self.file_path)
-
-        distances = load_distances(points, N)
-        np.savetxt("distances.txt", distances)
-
+        points, N = self.file.points,self.file.nb_villes
+        instance = self.file.file_path.split('/')[-1]
+        #distances = load_distances(points, N)
+        distances = self.file.distances
+        #np.savetxt("distances.txt", distances)
         tour, cout, time = ITS(distances, 0)
+        parametre="0"
+        fichier_save("./stats_file.csv", "rc_its", instance, parametre, cout, tour, time, time)
         print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
-
         Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
         cout_string = StringVar()
         cout_string.set(str(cout))
@@ -190,12 +193,16 @@ class Work_area_Window(Frame):
         print("HELOOO maj",self.file_path)"""
 
 
-        points, N = load_points(self.file_path)
-
-        distances = load_distances(points, N)
-        np.savetxt("distances.txt", distances)
+        #points, N = load_points(self.file_path)
+        points, N = self.file.points,self.file.nb_villes
+        #distances = load_distances(points, N)
+        distances = self.file.distances
+        instance = self.file.file_path.split('/')[-1]
+        #distances = load_distances(points, N)
+        #np.savetxt("distances.txt", distances)
         tour, cout, time = ITS(distances, 0 ,NB_IT_ITS=nb_iteration_ITS.get(),TAILLE_LISTE_TABOU_MAX=taille_liste_tabou.get(),mu=mu.get(),PAS_AUGMENTATION=float(pas_aug.get()),PAS_DIMINUTION=float(pas_dim.get()),MAX_ITERATION=nb_iteration.get(),taille_voisinage=taille_v_i.get(), TAILLE_VOISINAGE_MIN=taille_v_min.get(), TAILLE_VOISINAGE_MAX=taille_v_max.get(),)
-
+        parametre=str(0)+","+str(nb_iteration_ITS.get())+","+str(taille_liste_tabou.get())+","+str(mu.get())+","+str(float(pas_aug.get()))+","+ str(float(pas_dim.get()))+","+str(nb_iteration.get())+","+str(taille_v_i.get())+","+str(taille_v_min.get())+","+str(taille_v_max.get())
+        fichier_save("./stats_file.csv", "rc_its", instance, parametre, cout, tour, time, time)
         print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
 
         Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
@@ -290,13 +297,17 @@ class Work_area_Window(Frame):
     def show_tabou_simple(self, nb_iteration, frame1):
         """print("nb _it", nb_iteration.get())
         print("HELOOO maj",self.file_path)"""
-        points, N = load_points(self.file_path)
+        #points, N = load_points(self.file_path)
 
-        distances = load_distances(points, N)
-        np.savetxt("distances.txt", distances)
+        #distances = load_distances(points, N)
+        points, N = self.file.points,self.file.nb_villes
+        distances = self.file.distances
+        #np.savetxt("distances.txt", distances)
 
         tour, cout, amelioration, time = recherche_tabou_2opt(distances, 0)
-
+        instance = self.file.file_path.split('/')[-1]
+        parametre="0"
+        fichier_save("./stats_file.csv", "rc_2opt", instance, parametre, cout, tour, time, time)
         print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
 
         Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
@@ -320,13 +331,16 @@ class Work_area_Window(Frame):
 
         print("sol depart interface ", sol_depart.get())
 
-        points, N = load_points(self.file_path)
+        #points, N = load_points(self.file_path)
 
-        distances = load_distances(points, N)
-        np.savetxt("distances.txt", distances)
+        #distances = load_distances(points, N)
+        distances = self.file.distances
+        #np.savetxt("distances.txt", distances)
 
         tour, cout, amelioration, time = recherche_tabou_2opt(distances, 0,depart=sol_depart.get(),TAILLE_LISTE_TABOU_MAX=taille_liste_tabou.get(),mu=mu.get(),PAS_AUGMENTATION=float(pas_aug.get()),PAS_DIMINUTION=float(pas_dim.get()),MAX_ITERATION=nb_iteration.get(),taille_voisinage=taille_v_i.get(), TAILLE_VOISINAGE_MIN=taille_v_min.get(), TAILLE_VOISINAGE_MAX=taille_v_max.get(),)
-
+        instance = self.file.file_path.split('/')[-1]
+        parametre=str(0)+","+str(sol_depart.get())+","+str(taille_liste_tabou.get())+","+str(mu.get())+","+str(float(pas_aug.get()))+","+ str(float(pas_dim.get()))+","+str(nb_iteration.get())+","+str(taille_v_i.get())+","+str(taille_v_min.get())+","+str(taille_v_max.get())
+        fichier_save("./stats_file.csv", "rc_2opt", instance, parametre, cout, tour, time, time)
         print("temps dexecution recherche_tabou_2opt ", time, "cout opt", cout)
 
         Label(frame1, text="Cout du cycle obtenu :").grid(column=0, columnspan=1, row=10, padx=10)
@@ -352,6 +366,16 @@ class Work_area_Window(Frame):
             "depart": 1
         }
         self.paramaters["ppv"]=ppv
+        aco = {
+            "depart": 0,
+            "Q": 50,
+            "alpha": 1,
+            "beta": 1,
+            "l": 40,
+            "it": 30,
+            "ro": 0.5
+        }
+        self.paramaters["aco"] = aco
         #print(self.paramaters)
 
 
@@ -701,6 +725,140 @@ class Work_area_Window(Frame):
 
         Label(frame_opt,text="Gain en cout de la solution 3-OPT: ",font=("Courier", 18)).grid(column=0, columnspan=1, row=5,padx=10,pady=10)
         Label(frame_opt, text=str(100*(cout_2opt - cout_methode) / cout_methode)+"%",font=("Courier", 18),fg="#0000FF").grid(column=1, columnspan=1, row=5,padx=10,pady=10)
+
+    def show_aco(self):
+        frame = self.graph_frame.frame
+        frame_aco = Frame(frame)
+        frame_aco.grid(column=0, columnspan=1, row=0, sticky=N + S + E + W, padx=15, pady=5)
+        Grid.rowconfigure(frame_aco, 0, weight=1)
+        Grid.columnconfigure(frame_aco, 0, weight=1)
+        Grid.rowconfigure(frame, 0, weight=1)
+        Grid.columnconfigure(frame, 0, weight=1)
+        depart = self.paramaters["aco"]["depart"]
+        print(self.paramaters["aco"]["Q"])
+        Qu = self.paramaters["aco"]["Q"]
+        alpha = self.paramaters["aco"]["alpha"]
+        beta = self.paramaters["aco"]["beta"]
+        l = self.paramaters["aco"]["l"]
+        it = self.paramaters["aco"]["it"]
+        ro = self.paramaters["aco"]["ro"]
+
+        depart_tk = IntVar()
+        depart_tk.set(depart)
+        Q_tk = IntVar()
+        Q_tk.set(Qu)
+        alpha_tk = IntVar()
+        alpha_tk.set(alpha)
+        beta_tk = IntVar()
+        beta_tk.set(beta)
+        l_tk = IntVar()
+        l_tk.set(l)
+        it_tk = IntVar()
+        it_tk.set(it)
+
+        ro_tk = StringVar()
+        ro_tk.set(ro)
+
+        frame_aco_params = Frame(frame_aco)
+        frame_aco_params.pack()
+        Label(frame_aco_params, text="Ville de départ:").grid(column=0, columnspan=1, row=0, padx=10)
+        Entry(frame_aco_params, textvariable=depart_tk).grid(column=1, columnspan=1, row=0, padx=10)
+        Label(frame_aco_params, text="Nombre de fourmis").grid(column=0, columnspan=1, row=1, padx=10)
+        Entry(frame_aco_params, textvariable=l_tk).grid(column=1, columnspan=1, row=1, padx=10)
+        Label(frame_aco_params, text="Nombre de tours").grid(column=0, columnspan=1, row=2, padx=10)
+        Entry(frame_aco_params, textvariable=it_tk).grid(column=1, columnspan=1, row=2, padx=10)
+        Label(frame_aco_params, text="Taux d'évaporation").grid(column=0, columnspan=1, row=3, padx=10)
+        Entry(frame_aco_params, textvariable=ro_tk).grid(column=1, columnspan=1, row=3, padx=10)
+        Label(frame_aco_params, text="Coefficient de maj des phéromones Q").grid(column=0, columnspan=1, row=4, padx=10)
+        Entry(frame_aco_params, textvariable=Q_tk).grid(column=1, columnspan=1, row=4, padx=10)
+        Label(frame_aco_params, text="Coefficient des phéromones").grid(column=0, columnspan=1, row=5, padx=10)
+        Entry(frame_aco_params, textvariable=alpha_tk).grid(column=1, columnspan=1, row=5, padx=10)
+        Label(frame_aco_params, text="Coefficient de la visibilité").grid(column=0, columnspan=1, row=6, padx=10)
+        Entry(frame_aco_params, textvariable=beta_tk).grid(column=1, columnspan=1, row=6, padx=10)
+        self.graph_frame.update()
+        Button(frame_aco_params, text="Calculer",
+               command=partial(self.show_aco_result, depart_tk, l_tk, it_tk, ro_tk, Q_tk, alpha_tk, beta_tk,
+                               frame_aco_params)).grid(column=2, columnspan=1, row=0, padx=10)
+
+    def show_aco_result(self, depart_tk, l_tk, it_tk, ro_tk, Q_tk, alpha_tk, beta_tk, frame_aco_params):
+        depart = depart_tk.get()
+        Qu = Q_tk.get()
+        alpha = alpha_tk.get()
+        beta = beta_tk.get()
+        l = l_tk.get()
+        it = it_tk.get()
+        ro = 1 - float(ro_tk.get())
+
+        distances = self.file.distances
+        points, N = self.file.points,self.file.nb_villes
+        #distances = self.load_distances(points, N)
+        print(N)
+        visibility = np.zeros((N, N), "double")
+        P = np.zeros((N, N), "double")
+        for i in range(N):
+            for j in range(N):
+                if (distances[i][j] != 0):
+                    visibility[i][j] = 1 / distances[i][j]
+
+        pheromone = [[1 / 100 for i in range(N)] for j in range(N)]
+        pheromone2 = [[1 / 100 for i in range(N)] for j in range(N)]
+        for a in range(N):
+            pheromone[a][a] = 0
+            pheromone2[a][a] = 0
+        t1 = time.time()
+
+        for t in range(it):
+            for k in range(l):
+                allowed = [i for i in range(N)]
+                # i=np.random.randint(100)
+                i = 0
+                allowed.pop(allowed.index(i))
+                for a in range(N - 1):
+                    c = int(self.pk(i, allowed, pheromone, alpha, beta, visibility))
+                    allowed.pop(allowed.index(c))
+                    pheromone2[i][c] = pheromone[i][c] * ro + Qu / distances[i][c]
+                    pheromone2[c][i] = pheromone2[i][c]
+
+                    i = c
+            for a in range(N):
+                for b in range(N):
+                    pheromone[a][b] = pheromone2[a][b]
+
+        chemin = [0 for i in range(N)]
+        i = 0
+        cout = 0
+
+        for a in range(N):
+            ind = np.max(pheromone[i])
+            j = pheromone[i].index(ind)
+            for b in range(N):
+                pheromone[b][i] = 0
+            chemin[a] = j
+            cout = cout + distances[i][j]
+            i = j
+        chemin[N - 1] = 0
+        cout = cout + distances[i][0]
+        t2 = time.time()
+        Label(frame_aco_params, text="Cout : " + str(cout)).grid(column=0, columnspan=1, row=8, padx=10)
+        Label(frame_aco_params, text="Temps : " + str(t2 - t1)).grid(column=0, columnspan=1, row=9, padx=10)
+        instance = self.file.file_path.split('/')[-1]
+        parametre=str(depart)+","+str(Qu)+","+str(alpha)+","+str(beta)+","+str(l)+","+str(it)+","+str(ro)
+        temps = t2 - t1
+        fichier_save("./stats_file.csv", "aco", instance, parametre, cout, chemin, temps, temps)
+        print(chemin)
+        print(cout)
+
+    def pk(self, i, allowed, pheromone, alpha, beta, visibility):
+        somme = 0
+        for j in range(len(allowed)):
+            somme = somme + (pheromone[i][allowed[j]] ** alpha) * (visibility[i][allowed[j]] ** beta)
+        prob = [0 for j in range(len(allowed))]
+        for j in range(len(allowed)):
+            prob[j] = ((pheromone[i][allowed[j]] ** alpha) * (visibility[i][allowed[j]] ** beta)) / somme
+        return np.random.choice(
+            allowed,
+            1,
+            p=prob)
 
     def show_programmation_dynamique(self):
 

@@ -806,7 +806,8 @@ def tolist(tab):
 def fichier_save(nom_fichier, methode, instance, parametre, cout, tour_optimal, temps, temps_cumule):
     df = pd.read_csv(nom_fichier)
     k = df.loc[(df['méthode'] == methode) & (df['instance'] == instance) & (df["parametre"] == parametre)]
-    if (k.empty):
+    if (k.empty) or (methode =="rc_its") or (methode =="rc_2opt") :
+        print("haha")
         data2 = {
             "méthode": methode,
             "instance": instance,
@@ -819,8 +820,8 @@ def fichier_save(nom_fichier, methode, instance, parametre, cout, tour_optimal, 
         df = df.append(data2, ignore_index=True)
         df.to_csv(nom_fichier, index=False)
     else:
-        index = k.index.tolist()[0]
-        df.loc[index, ["cout", "temps", "temps_cumulé"]] = [str(cout), str(temps), str(temps_cumule)]
+            index = k.index.tolist()[0]
+            df.loc[index, ["cout", "temps", "temps_cumulé"]] = [str(cout), str(temps), str(temps_cumule)]
 
 
 def get_results(nom_fichier, methode, instance, parametre):

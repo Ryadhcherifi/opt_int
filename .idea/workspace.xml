@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d3477fee-c9a6-4b48-a4c7-343955dd5f6f" name="Default Changelist" comment="" />
+    <list default="true" id="d3477fee-c9a6-4b48-a4c7-343955dd5f6f" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/distances.txt" beforeDir="false" afterPath="$PROJECT_DIR$/distances.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interface_affichage.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface_affichage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel.py" beforeDir="false" afterPath="$PROJECT_DIR$/kernel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/savetabou.txt" beforeDir="false" afterPath="$PROJECT_DIR$/savetabou.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stats_file.csv" beforeDir="false" afterPath="$PROJECT_DIR$/stats_file.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tabou.py" beforeDir="false" afterPath="$PROJECT_DIR$/tabou.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,7 +58,10 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="d3477fee-c9a6-4b48-a4c7-343955dd5f6f" name="Default Changelist" comment="" />
@@ -61,11 +72,12 @@
       <workItem from="1622319878127" duration="36000" />
       <workItem from="1622320044176" duration="481000" />
       <workItem from="1622320542533" duration="1670000" />
+      <workItem from="1622326911986" duration="6362000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
+    <option name="version" value="1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/version2$interface.coverage" NAME="interface Coverage Results" MODIFIED="1622320903053" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

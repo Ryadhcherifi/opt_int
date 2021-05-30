@@ -137,6 +137,7 @@ def mini_ppv(chaine, distances):
 def RGR(solution_courante, distances, mu):
     s_rgr = solution_courante.copy()
     cout = calculer_cout(s_rgr, distances)
+    print(distances.shape[0])
     i = randint(1,distances.shape[0]-1-mu)
     tmp = s_rgr[i:i+mu]
     tmp = mini_ppv(tmp, distances)
